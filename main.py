@@ -1,6 +1,6 @@
 # import our Ui_MainWindow class from our Qt Designer generated file
-from test import Ui_MainWindow
-
+from gui import Ui_MainWindow
+from datetime import date
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
@@ -32,20 +32,57 @@ class cvd_control(QtWidgets.QMainWindow):
         # create a 2D list of the ui fields we will save to the recipe file
         ui_fields = self.return_ui_fields()
         
-        # read the values in the ui fields and write them to 2D list of strings
+        # write the meta data in the header
         text_to_save = []
-        i = 0
+
+        # set an author name if there isn't one already
+        if self.ui.label_author.text() == 'Author: N/A':
+            author, ok = QtWidgets.QInputDialog.getText(self,'Author','Enter the name of the recipe\'s author:')
+            if ok:
+                self.ui.label_author.setText('Author: ' + author)
+                text_to_save += ['#Author: ' + author + '\n']
+        else:
+            text_to_save += ['#' + self.ui.label_author.text() + '\n']
+        
+        # set recipe creation date as current date if it's a new recipe
+        if self.ui.label_creation_date.text() == 'Creation Date: N/A':
+            self.ui.label_creation_date.setText('Creation Date: ' + str(date.today()))
+            text_to_save += ['#Creation Date: ' + str(date.today()) + '\n']
+        else:
+            text_to_save += ['#' + self.ui.label_creation_date.text() + '\n']
+
+        # set gases if they haven't been set yet
+        if self.ui.label_gas_1.text() == 'Gas 1':
+            gas_text = '#Columns:'
+            gas_1, ok = QtWidgets.QInputDialog.getText(self,'Gas 1','What is the first gas?')
+            if ok:
+                self.ui.label_gas_1.setText(gas_1)
+                gas_text += gas_1 + ','
+            gas_2, ok = QtWidgets.QInputDialog.getText(self,'Gas 2','What is the second gas?')
+            if ok:
+                self.ui.label_gas_2.setText(gas_2)
+                gas_text += gas_2 + ','
+            gas_3, ok = QtWidgets.QInputDialog.getText(self,'Gas 3','What is the third gas?')
+            if ok:
+                self.ui.label_gas_3.setText(gas_3)
+                gas_text += gas_3 + '\n'
+            text_to_save += [gas_text]
+        else:
+            text_to_save += ['#Columns:' + self.ui.label_gas_1.text() + ',' + self.ui.label_gas_2.text() + ',' + self.ui.label_gas_3.text() + '\n']
+        
+        # update the tracker for when the recipe was last modified
+        self.ui.label_last_updated.setText('Last Modified: ' + str(date.today()))
+        text_to_save += ['#Last Modified: ' + str(date.today()) + '\n']
+        
+        # read the values in the ui fields and write them to 2D list of strings
         for line in ui_fields:
-            # # add a new line to the file if required
-            try:
-                text_to_save[i]
-            except IndexError:
-                text_to_save += ['']
+            # # add a new line to the file
+            text_to_save += ['']
             
             for field in line:
-                text_to_save[i] += field.text() + ','
-            text_to_save[i] = text_to_save[i][:-1] + '\n'      # remove final comma and add new line char
-            i += 1
+                text_to_save[-1] += field.text() + ','
+            text_to_save[-1] = text_to_save[-1][:-1] + '\n'      # remove final comma and add new line char
+            # i += 1
 
         # show save file dialogue and write file path to fileName variable
         options = QtWidgets.QFileDialog.Options()
