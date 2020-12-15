@@ -5,6 +5,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import pyqtgraph
+import math
 
 # define a new class which inherits from the QMainWindow object - not a default python object like our Ui_MainWindow class
 class cvd_control(QtWidgets.QMainWindow): 
@@ -34,7 +35,28 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
         
         # put some static data onto the plots
-        self.plot([1,2,3,4,5,6,7,8,9,10], [30,32,34,32,33,31,29,32,35,45],[30,32,34,32,33,31,29,32,35,45],[20,37,32,36,37,38,23,34,36,42],[34,35,37,38,34,33,26,35,34,48])
+        # self.plot([1,2,3,4,5,6,7,8,9,10], [30,32,34,32,33,31,29,32,35,45],[30,32,34,32,33,31,29,32,35,45],[20,37,32,36,37,38,23,34,36,42],[34,35,37,38,34,33,26,35,34,48])
+
+        # define variables for dynamic data
+        self.time = list(range(100))
+        self.temp = [math.sin(time/12) for time in self.time]
+        self.gas_1_flow = [math.sin(time/24) for time in self.time]
+        self.gas_2_flow = [math.sin(time/12) for time in self.time]
+        self.gas_3_flow = [math.sin(time/6) for time in self.time]
+
+        pen_1 = pyqtgraph.mkPen(color='#7a0177',width=2)
+        pen_2 = pyqtgraph.mkPen(color='#c51b8a',width=2)
+        pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
+        self.temp_line = self.ui.temp_graph.plot(self.time,self.temp,pen=pen_1)
+        self.gas_1_line = self.ui.gas_graph.plot(self.time,self.gas_1_flow,name='Gas 1',pen=pen_1)
+        self.gas_2_line = self.ui.gas_graph.plot(self.time,self.gas_2_flow,name='Gas 2',pen=pen_2)
+        self.gas_3_line = self.ui.gas_graph.plot(self.time,self.gas_3_flow,name='Gas 3',pen=pen_3)
+
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(50)
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start()
+
 
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
@@ -164,14 +186,37 @@ class cvd_control(QtWidgets.QMainWindow):
             column.setText(column_names[i])
             i += 1
 
-    def plot(self,time,temp,gas_1_flow,gas_2_flow,gas_3_flow):
-        pen_1 = pyqtgraph.mkPen(color='#7a0177',width=2)
-        pen_2 = pyqtgraph.mkPen(color='#c51b8a',width=2)
-        pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
-        self.ui.temp_graph.plot(time,temp,pen=pen_1)
-        self.ui.gas_graph.plot(time,gas_1_flow,name='Gas 1',pen=pen_1)
-        self.ui.gas_graph.plot(time,gas_2_flow,name='Gas 2',pen=pen_2)
-        self.ui.gas_graph.plot(time,gas_3_flow,name='Gas 3',pen=pen_3)
+    # def plot(self,time,temp,gas_1_flow,gas_2_flow,gas_3_flow):
+    #     pen_1 = pyqtgraph.mkPen(color='#7a0177',width=2)
+    #     pen_2 = pyqtgraph.mkPen(color='#c51b8a',width=2)
+    #     pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
+    #     self.ui.temp_graph.plot(time,temp,pen=pen_1)
+    #     self.ui.gas_graph.plot(time,gas_1_flow,name='Gas 1',pen=pen_1)
+    #     self.ui.gas_graph.plot(time,gas_2_flow,name='Gas 2',pen=pen_2)
+    #     self.ui.gas_graph.plot(time,gas_3_flow,name='Gas 3',pen=pen_3)
+
+    def update_plot(self):
+        self.time = self.time[1:]
+        self.time += [self.time[-1] + 1]
+
+        self.temp = self.temp[1:]
+        self.temp += [math.sin(self.time[-1]/12)]
+
+        self.gas_1_flow = self.gas_1_flow[1:]
+        self.gas_1_flow += [math.sin(self.time[-1]/24)]
+
+        self.gas_2_flow = self.gas_2_flow[1:]
+        self.gas_2_flow += [math.sin(self.time[-1]/12)]
+
+        self.gas_3_flow = self.gas_3_flow[1:]
+        self.gas_3_flow += [math.sin(self.time[-1]/6)]
+
+        self.temp_line.setData(self.time,self.temp)
+        self.gas_1_line.setData(self.time,self.gas_1_flow)
+        self.gas_2_line.setData(self.time,self.gas_2_flow)
+        self.gas_3_line.setData(self.time,self.gas_3_flow)
+
+
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
