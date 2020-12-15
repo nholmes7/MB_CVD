@@ -3,6 +3,8 @@ from gui import Ui_MainWindow
 from datetime import date
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
+import pyqtgraph
 
 # define a new class which inherits from the QMainWindow object - not a default python object like our Ui_MainWindow class
 class cvd_control(QtWidgets.QMainWindow): 
@@ -19,6 +21,20 @@ class cvd_control(QtWidgets.QMainWindow):
         # make required connections
         self.ui.save_button.clicked.connect(self.save_recipe)
         self.ui.open_button.clicked.connect(self.open_recipe)
+
+        # configure the plots and their settings
+        background_colour = self.palette().color(QtGui.QPalette.Window)         # gets the background window colour to use as teh plot background colour
+        self.ui.temp_graph.setBackground(background_colour)
+        self.ui.gas_graph.setBackground(background_colour)
+        self.ui.temp_graph.setTitle('Temperature',color='k',size = '16pt')
+        self.ui.gas_graph.setTitle('Flow Rates',color='k',size = '16pt')
+        self.ui.gas_graph.addLegend(offset = (1,-150))
+        styles = {"color": 'k', "font-size": "14px"}
+        self.ui.temp_graph.setLabel("bottom", "Time (s)", **styles)
+        self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
+        
+        # put some static data onto the plots
+        self.plot([1,2,3,4,5,6,7,8,9,10], [30,32,34,32,33,31,29,32,35,45],[30,32,34,32,33,31,29,32,35,45],[20,37,32,36,37,38,23,34,36,42],[34,35,37,38,34,33,26,35,34,48])
 
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
@@ -147,6 +163,15 @@ class cvd_control(QtWidgets.QMainWindow):
         for column in column_labels:
             column.setText(column_names[i])
             i += 1
+
+    def plot(self,time,temp,gas_1_flow,gas_2_flow,gas_3_flow):
+        pen_1 = pyqtgraph.mkPen(color='#7a0177',width=2)
+        pen_2 = pyqtgraph.mkPen(color='#c51b8a',width=2)
+        pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
+        self.ui.temp_graph.plot(time,temp,pen=pen_1)
+        self.ui.gas_graph.plot(time,gas_1_flow,name='Gas 1',pen=pen_1)
+        self.ui.gas_graph.plot(time,gas_2_flow,name='Gas 2',pen=pen_2)
+        self.ui.gas_graph.plot(time,gas_3_flow,name='Gas 3',pen=pen_3)
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
