@@ -22,6 +22,9 @@ class cvd_control(QtWidgets.QMainWindow):
         # make required connections
         self.ui.save_button.clicked.connect(self.save_recipe)
         self.ui.open_button.clicked.connect(self.open_recipe)
+        self.ui.button_start_recipe.clicked.connect(self.start_recipe)
+        self.ui.button_stop_recipe.clicked.connect(self.stop_recipe)
+        self.ui.button_apply_setpoints.clicked.connect(self.apply_setpoints)
 
         # configure the plots and their settings
         background_colour = self.palette().color(QtGui.QPalette.Window)         # gets the background window colour to use as teh plot background colour
@@ -33,9 +36,6 @@ class cvd_control(QtWidgets.QMainWindow):
         styles = {"color": 'k', "font-size": "14px"}
         self.ui.temp_graph.setLabel("bottom", "Time (s)", **styles)
         self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
-        
-        # put some static data onto the plots
-        # self.plot([1,2,3,4,5,6,7,8,9,10], [30,32,34,32,33,31,29,32,35,45],[30,32,34,32,33,31,29,32,35,45],[20,37,32,36,37,38,23,34,36,42],[34,35,37,38,34,33,26,35,34,48])
 
         # define variables for dynamic data
         self.time = list(range(100))
@@ -186,15 +186,6 @@ class cvd_control(QtWidgets.QMainWindow):
             column.setText(column_names[i])
             i += 1
 
-    # def plot(self,time,temp,gas_1_flow,gas_2_flow,gas_3_flow):
-    #     pen_1 = pyqtgraph.mkPen(color='#7a0177',width=2)
-    #     pen_2 = pyqtgraph.mkPen(color='#c51b8a',width=2)
-    #     pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
-    #     self.ui.temp_graph.plot(time,temp,pen=pen_1)
-    #     self.ui.gas_graph.plot(time,gas_1_flow,name='Gas 1',pen=pen_1)
-    #     self.ui.gas_graph.plot(time,gas_2_flow,name='Gas 2',pen=pen_2)
-    #     self.ui.gas_graph.plot(time,gas_3_flow,name='Gas 3',pen=pen_3)
-
     def update_plot(self):
         self.time = self.time[1:]
         self.time += [self.time[-1] + 1]
@@ -216,7 +207,20 @@ class cvd_control(QtWidgets.QMainWindow):
         self.gas_2_line.setData(self.time,self.gas_2_flow)
         self.gas_3_line.setData(self.time,self.gas_3_flow)
 
+    def start_recipe(self):
+        self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">RUNNING</span></p></body></html>")
 
+    def stop_recipe(self):
+        self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">STOPPED</span></p></body></html>")
+
+    def apply_setpoints(self):
+        # self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + self.ui.lineEdit_2.text() + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+        if self.ui.lineEdit_3.text() != '':
+            self.ui.label_gas_1_setpoint.setText('Gas 1: ' + self.ui.lineEdit_3.text() + ' sccm')
+        if self.ui.lineEdit_4.text() != '':
+            self.ui.label_gas_2_setpoint.setText('Gas 2: ' + self.ui.lineEdit_4.text() + ' sccm')
+        if self.ui.lineEdit_5.text() != '':
+            self.ui.label_gas_3_setpoint.setText('Gas 3: ' + self.ui.lineEdit_5.text() + ' sccm')
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
