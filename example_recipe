@@ -1,8 +1,7 @@
 #Author: Nathaniel Holmes
 #Creation Date: 2020-12-14
 #Columns: Helium,Hydrogen,Ethylene
-#Last Modified: 2020-12-14
-oooh,4 C,abc,500,1
-ahh,4 C,def,500,1000
-I wanna know,4 C,ghi,35,did it work
-##Notes: This is a recipe to test everything out.
+#Last Modified: 2020-12-15
+test1,4 C,abc,500,1
+test2,8 C,def,500,1000
+test3,2 C,ghi,35,did it work
