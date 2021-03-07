@@ -6,6 +6,26 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import pyqtgraph
 import math
+import serial
+
+ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+
+def poll_pressure():
+    string_to_send = '#123P\r'
+    string_to_send = bytes(string_to_send, 'ascii')
+    poll_status = 'failed'
+    while poll_status == 'failed':                                          # the pressure transducer is a bit buggy so we need to check if the returned value is valid
+        ser.write(string_to_send)
+        returned_data = ser.read_until(terminator=bytes(">",'ascii'))       
+        returned_data = returned_data.decode('ascii',errors='ignore')       # this turns it into a string and gets rid of all the random hex characters
+        index = returned_data.find('@')                                     # the '@' marks the beginning of the message
+        returned_data = returned_data[index+4:index+11]                     # +4 skips the address and reads to the end of the 6 digit pressure value
+        try:                                                                
+            returned_data = float(returned_data)                            # if the result can't be converted to a float, something went wrong and we try again
+            poll_status = 'success'
+        except:
+            pass
+    return returned_data
 
 # define a new class which inherits from the QMainWindow object - not a default python object like our Ui_MainWindow class
 class cvd_control(QtWidgets.QMainWindow): 
@@ -27,33 +47,38 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.button_apply_setpoints.clicked.connect(self.apply_setpoints)
 
         # configure the plots and their settings
-        background_colour = self.palette().color(QtGui.QPalette.Window)         # gets the background window colour to use as teh plot background colour
-        self.ui.temp_graph.setBackground(background_colour)
-        self.ui.gas_graph.setBackground(background_colour)
-        self.ui.temp_graph.setTitle('Temperature',color='k',size = '16pt')
-        self.ui.gas_graph.setTitle('Flow Rates',color='k',size = '16pt')
-        self.ui.gas_graph.addLegend(offset = (1,-150))
+        background_colour = self.palette().color(QtGui.QPalette.Window)         # gets the background window colour to use as the plot background colour
         styles = {"color": 'k', "font-size": "14px"}
+        self.ui.temp_graph.setBackground(background_colour)
+        self.ui.temp_graph.setTitle('Temperature',color='k',size = '16pt')
         self.ui.temp_graph.setLabel("bottom", "Time (s)", **styles)
-        self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
+        # self.ui.gas_graph.setBackground(background_colour)
+        # self.ui.gas_graph.setTitle('Flow Rates',color='k',size = '16pt')
+        # self.ui.gas_graph.addLegend(offset = (1,-150))
+        # self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
 
         # define variables for dynamic data
-        self.time = list(range(100))
-        self.temp = [math.sin(time/12) for time in self.time]
-        self.gas_1_flow = [math.sin(time/24) for time in self.time]
-        self.gas_2_flow = [math.sin(time/12) for time in self.time]
-        self.gas_3_flow = [math.sin(time/6) for time in self.time]
+        # self.time = list(range(100))
+        # self.temp = [math.sin(time/12) for time in self.time]
+        self.time = []
+        self.temp = []
+        # self.gas_1_flow = [math.sin(time/24) for time in self.time]
+        # self.gas_2_flow = [math.sin(time/12) for time in self.time]
+        # self.gas_3_flow = [math.sin(time/6) for time in self.time]
 
+        # these pen objects are used when graphing in order to affect how the lines look
         pen_1 = pyqtgraph.mkPen(color='#7a0177',width=2)
         pen_2 = pyqtgraph.mkPen(color='#c51b8a',width=2)
         pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
+
+        # plot the initial points onto the graphs
         self.temp_line = self.ui.temp_graph.plot(self.time,self.temp,pen=pen_1)
-        self.gas_1_line = self.ui.gas_graph.plot(self.time,self.gas_1_flow,name='Gas 1',pen=pen_1)
-        self.gas_2_line = self.ui.gas_graph.plot(self.time,self.gas_2_flow,name='Gas 2',pen=pen_2)
-        self.gas_3_line = self.ui.gas_graph.plot(self.time,self.gas_3_flow,name='Gas 3',pen=pen_3)
+        # self.gas_1_line = self.ui.gas_graph.plot(self.time,self.gas_1_flow,name='Gas 1',pen=pen_1)
+        # self.gas_2_line = self.ui.gas_graph.plot(self.time,self.gas_2_flow,name='Gas 2',pen=pen_2)
+        # self.gas_3_line = self.ui.gas_graph.plot(self.time,self.gas_3_flow,name='Gas 3',pen=pen_3)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(50)
+        self.timer.setInterval(250)
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 
@@ -186,26 +211,39 @@ class cvd_control(QtWidgets.QMainWindow):
             column.setText(column_names[i])
             i += 1
 
+    # def update_plot_2(self):
+    #     self.time = self.time[1:]
+    #     self.time += [self.time[-1] + 1]
+    #     read the value from the serial port
+    #     if the data is less than a certain length we chop the first value off
+    #     else we just add the data
+    #     update the plot
+    
     def update_plot(self):
-        self.time = self.time[1:]
-        self.time += [self.time[-1] + 1]
+        # update the variables by chopping off the first value and adding one on the end
+        try:
+            self.time.append(self.time[-1] + 1)
+        except IndexError:
+            self.time.append(1)
+        self.time = self.time[-10:]
 
-        self.temp = self.temp[1:]
-        self.temp += [math.sin(self.time[-1]/12)]
+        self.temp.append(poll_pressure())
+        self.temp = self.temp[-10:]
 
-        self.gas_1_flow = self.gas_1_flow[1:]
-        self.gas_1_flow += [math.sin(self.time[-1]/24)]
+        # self.gas_1_flow = self.gas_1_flow[1:]
+        # self.gas_1_flow += [math.sin(self.time[-1]/24)]
 
-        self.gas_2_flow = self.gas_2_flow[1:]
-        self.gas_2_flow += [math.sin(self.time[-1]/12)]
+        # self.gas_2_flow = self.gas_2_flow[1:]
+        # self.gas_2_flow += [math.sin(self.time[-1]/12)]
 
-        self.gas_3_flow = self.gas_3_flow[1:]
-        self.gas_3_flow += [math.sin(self.time[-1]/6)]
+        # self.gas_3_flow = self.gas_3_flow[1:]
+        # self.gas_3_flow += [math.sin(self.time[-1]/6)]
 
+        # update the plots
         self.temp_line.setData(self.time,self.temp)
-        self.gas_1_line.setData(self.time,self.gas_1_flow)
-        self.gas_2_line.setData(self.time,self.gas_2_flow)
-        self.gas_3_line.setData(self.time,self.gas_3_flow)
+        # self.gas_1_line.setData(self.time,self.gas_1_flow)
+        # self.gas_2_line.setData(self.time,self.gas_2_flow)
+        # self.gas_3_line.setData(self.time,self.gas_3_flow)
 
     def start_recipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">RUNNING</span></p></body></html>")
