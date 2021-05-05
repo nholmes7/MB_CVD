@@ -27,6 +27,14 @@ def poll_pressure():
             pass
     return returned_data
 
+def poll_MFC_flow(device_address):
+    pass
+
+def set_MFC_flow(device_address,flow_rate):
+    pass
+
+
+
 # define a new class which inherits from the QMainWindow object - not a default python object like our Ui_MainWindow class
 class cvd_control(QtWidgets.QMainWindow): 
     
