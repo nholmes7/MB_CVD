@@ -1,5 +1,5 @@
 # MB_CVD
-This is where all the code will live for the tube furnace CVD system in SEB 2026.  This is a test to see how Git works. This is another test.\
+This is where all the code will live for the tube furnace CVD system in SEB 2026.\
 \
 The files do the following:
 * main.py: the main file for the project
