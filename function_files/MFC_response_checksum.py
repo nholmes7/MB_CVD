@@ -17,7 +17,6 @@ def check_response(response):
 def MFC_response_checksum(response):
     response,_ = response.split(';')
     response = response + ';'
-    print(response)
     response = bytearray(response,'ascii')
     char_sum = sum(response)
     return hex(char_sum)[-2:].upper()

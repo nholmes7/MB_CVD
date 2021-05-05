@@ -10,6 +10,6 @@ def MFC_command_checksum(command):
     command = command[index:]
     command = bytearray(command,'ascii')
     char_sum = sum(command)
-    return hex(char_sum)[-2:]
+    return hex(char_sum)[-2:].upper()
 
 # print(MFC_command_checksum('@@@001UT!TEST;16'))
