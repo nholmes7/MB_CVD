@@ -10,7 +10,7 @@ equipment = {
     # 'MFC_1':'101',
     # 'MFC_2':'102',
     # 'MFC_3':'103',
-    'MFC_4':'104'
+    'MFC_H2':'104'
 }
 
 def startup(equipment):
