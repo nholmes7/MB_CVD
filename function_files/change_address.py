@@ -4,22 +4,10 @@ from MFC_response_checksum import *
 
 ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 
-# Ping all the devices on the network to make sure we have communication with each before we begin running our program.
+# Function definition for setting the address of a connected MFC.
 
-equipment = {
-    # 'MFC_1':'101',
-    # 'MFC_2':'102',
-    # 'MFC_3':'103',
-    'MFC_4':'104'
-}
-
-def startup(equipment):
-    for device in equipment:
-        operating_mode = MFC_OM_query(equipment[device])
-        print(device + ' is in ' + operating_mode + '.')
-
-def MFC_OM_query(MFC_ID):
-    command = '@@@' + str(MFC_ID) + 'OM?;'
+def change_address(current_address,new_address):
+    command = '@@@' + str(current_address) + 'CA!' + str(new_address) + ';'
     # append the checksum
     command = command + MFC_command_checksum(command)
     command = bytes(command,'ascii')
@@ -38,12 +26,12 @@ def MFC_OM_query(MFC_ID):
         acknowledged = reply.count('ACK')
         if acknowledged and check_response(reply):
             send_status = True
-            # parse out the flow rate from the reply message
+            # parse out the address from the reply message
             start_pos = reply.index('ACK')
             end_pos = reply.index(';')
-            operating_mode = reply[start_pos+3:end_pos]
+            set_address = reply[start_pos+3:end_pos]
         if counter > max_iter:
-            return 'No communication with MFC ' + str(MFC_ID)
-    return operating_mode
+            return 'No communication with MFC ' + str(current_address)
+    return set_address
 
-startup(equipment)
+print(change_address('254','104'))
