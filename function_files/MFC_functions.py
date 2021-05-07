@@ -33,8 +33,8 @@ def MFC_command(MFC_ID,command_type,command_value=""):
             start_pos = reply.index('ACK')
             end_pos = reply.index(';')
             returned_text = reply[start_pos+3:end_pos]
-        if counter > max_iter:
-            return 'No communication with MFC ' + str(MFC_ID)
+        if comm_attempts > max_iter:
+            return 'Unsuccessful communication with MFC ' + str(MFC_ID)
     return command_dict[command_type][1] + returned_text + command_dict[command_type][2]
 
 # Function drops a checksum value if present, 
