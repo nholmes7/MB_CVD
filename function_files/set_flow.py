@@ -26,4 +26,4 @@ def set_flow(MFC_ID,flow_rate):
             send_status = True
     print('Flow for MFC ' + str(MFC_ID) + ' set to ' + str(flow_rate) + 'sccm')
 
-set_flow(103,50)
+set_flow(103,0)
