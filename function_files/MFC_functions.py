@@ -8,7 +8,8 @@ def MFC_command(MFC_ID,command_type,command_value=""):
     command_dict = dict{
         'set_flow':['SX!','Flow set to ',' sccm'],
         'change_address':['CA!','Flow set to ',''],
-        'report_flow':['FX?','Flow reported to be ',' sccm']
+        'report_flow':['FX?','Flow reported to be ',' sccm'],
+        'query_operating_mode':['OM?','MFC is in ','']
     }
     command_text = command_dict[command_type][0]
     command = '@@@' + str(MFC_ID) + command_text + str(command_value) + ';'
@@ -47,8 +48,8 @@ def MFC_command(MFC_ID,command_type,command_value=""):
             returned_text = reply[start_pos+3:end_pos]
         if comm_attempts > max_iter:
             return 'Unsuccessful communication with MFC ' + str(MFC_ID)
-
-    return command_dict[command_type][1] + returned_text + command_dict[command_type][2]
+    print(command_dict[command_type][1] + returned_text + command_dict[command_type][2])
+    return returned_text
 
 # Function drops a checksum value if present, 
 # drops any leading '@' symbols, and then calculates 
