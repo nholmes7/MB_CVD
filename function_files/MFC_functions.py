@@ -27,6 +27,18 @@ def MFC_command(MFC_ID,command_type,command_value=""):
         reply = reply + ser.read(size=2)
         reply = reply.decode('ascii',errors = 'ignore')
         print('Received: ' + str(reply))
+        # Try except statement to deal with the frequent weirdness
+        # at the start of the replies
+        try:
+            pos = reply.rindex('@')
+            reply = '@@' + reply[pos:]
+        except ValueError:
+            pass
+        print('Interpreted as: ' + str(reply))
+        
+        # For communication to be deemed successful, the string
+        # 'ACK' must appear in the reply, and the checksum needs
+        # to be correct.
         acknowledged = reply.count('ACK')
         if acknowledged and check_response(reply):
             send_status = True
@@ -35,7 +47,14 @@ def MFC_command(MFC_ID,command_type,command_value=""):
             returned_text = reply[start_pos+3:end_pos]
         if comm_attempts > max_iter:
             return 'Unsuccessful communication with MFC ' + str(MFC_ID)
+            
     return command_dict[command_type][1] + returned_text + command_dict[command_type][2]
+
+try:
+        pos = reply.rindex('@')
+        print('@@' + reply[pos:])
+    except ValueError:
+        pass
 
 # Function drops a checksum value if present, 
 # drops any leading '@' symbols, and then calculates 
