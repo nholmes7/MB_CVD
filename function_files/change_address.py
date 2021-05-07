@@ -18,7 +18,8 @@ def change_address(current_address,new_address):
         counter = counter + 1
         print('Sending: ' + str(command))
         ser.write(command)
-        reply = ser.read_until(expected=bytes(';','ascii'))
+        # reply = ser.read_until(expected=bytes(';','ascii'))
+        reply = ser.read_until(terminator=bytes(';','ascii'))
         # append the checksum characters
         reply = reply + ser.read(size=2)
         reply = reply.decode('ascii',errors = 'ignore')
@@ -34,4 +35,4 @@ def change_address(current_address,new_address):
             return 'No communication with MFC ' + str(current_address)
     return set_address
 
-print(change_address('254','104'))
+print(change_address('254','101'))

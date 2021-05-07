@@ -7,10 +7,10 @@ ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 # Ping all the devices on the network to make sure we have communication with each before we begin running our program.
 
 equipment = {
-    # 'MFC_1':'101',
-    # 'MFC_2':'102',
-    # 'MFC_3':'103',
-    'MFC_H2':'104'
+    'MFC_C2H4':'101',
+    'MFC_Ar':'102',
+    'MFC_He':'103'
+    # 'MFC_H2':'104'
 }
 
 def startup(equipment):
@@ -30,7 +30,8 @@ def MFC_OM_query(MFC_ID):
         counter = counter + 1
         print('Sending: ' + str(command))
         ser.write(command)
-        reply = ser.read_until(expected=bytes(';','ascii'))
+        # reply = ser.read_until(expected=bytes(';','ascii'))
+        reply = ser.read_until(terminator=bytes(';','ascii'))
         # append the checksum characters
         reply = reply + ser.read(size=2)
         reply = reply.decode('ascii',errors = 'ignore')
