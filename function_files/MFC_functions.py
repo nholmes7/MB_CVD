@@ -1,0 +1,75 @@
+import serial
+
+ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
+
+# A file to house all the functions associated with MFC control.
+
+def MFC_command(MFC_ID,command_type,command_value=""):
+    command_dict = dict{
+        'set_flow':['SX!','Flow set to ',' sccm'],
+        'change_address':['CA!','Flow set to ',''],
+        'report_flow':['FX?','Flow reported to be ',' sccm']
+    }
+    command_text = command_dict[command_type][0]
+    command = '@@@' + str(MFC_ID) + command_text + str(command_value) + ';'
+    command = command + MFC_command_checksum(command)
+    command = bytes(command,'ascii')
+    send_status = False
+    max_iter = 5
+    comm_attempts = 0
+    while not send_status:
+        comm_attempts = comm_attempts + 1
+        print('Sending: ' + str(command))
+        ser.write(command)
+        # reply = ser.read_until(expected=bytes(';','ascii'))
+        reply = ser.read_until(terminator=bytes(';','ascii'))
+        # append the checksum characters
+        reply = reply + ser.read(size=2)
+        reply = reply.decode('ascii',errors = 'ignore')
+        print('Received: ' + str(reply))
+        acknowledged = reply.count('ACK')
+        if acknowledged and check_response(reply):
+            send_status = True
+            start_pos = reply.index('ACK')
+            end_pos = reply.index(';')
+            returned_text = reply[start_pos+3:end_pos]
+        if counter > max_iter:
+            return 'No communication with MFC ' + str(MFC_ID)
+    return command_dict[command_type][1] + returned_text + command_dict[command_type][2]
+
+# Function drops a checksum value if present, 
+# drops any leading '@' symbols, and then calculates 
+# the checksum by summing the ASCII values, and 
+# returning the last two hexadecimal digits of the sum value.
+
+def MFC_command_checksum(command):
+    command,_ = command.split(';')
+    command = command + ';'
+    index = command.rindex('@')
+    command = command[index:]
+    command = bytearray(command,'ascii')
+    char_sum = sum(command)
+    return hex(char_sum)[-2:].upper()
+
+# Function checks to see if the checksum provided 
+# is correct.
+
+def check_response(response):
+    checksum = response[-2:]
+    calculated_checksum = MFC_response_checksum(response)
+    if checksum == calculated_checksum:
+        return True
+    else:
+        return False
+
+# Function drops a checksum value if present and 
+# then calculates the checksum by summing the ASCII 
+# values, and returning the last two hexadecimal 
+# digits of the sum value.
+
+def MFC_response_checksum(response):
+    response,_ = response.split(';')
+    response = response + ';'
+    response = bytearray(response,'ascii')
+    char_sum = sum(response)
+    return hex(char_sum)[-2:].upper()
