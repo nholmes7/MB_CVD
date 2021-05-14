@@ -5,8 +5,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import pyqtgraph
-import math
-import serial
+import threading, time, serial, math
+from run_recipe import run_recipe
 
 ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
 
@@ -193,14 +193,6 @@ class cvd_control(QtWidgets.QMainWindow):
         for column in column_labels:
             column.setText(column_names[i])
             i += 1
-
-    # def update_plot_2(self):
-    #     self.time = self.time[1:]
-    #     self.time += [self.time[-1] + 1]
-    #     read the value from the serial port
-    #     if the data is less than a certain length we chop the first value off
-    #     else we just add the data
-    #     update the plot
     
     def update_plot(self):
         # update the variables by chopping off the first value and adding one on the end
@@ -230,6 +222,8 @@ class cvd_control(QtWidgets.QMainWindow):
 
     def start_recipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">RUNNING</span></p></body></html>")
+        run_task = threading.Thread(target=run_recipe)
+        run_task.start()
 
     def stop_recipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">STOPPED</span></p></body></html>")

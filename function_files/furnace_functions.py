@@ -1,5 +1,6 @@
 def furnace_checksum(command):
     CRC = 0xFFFF
+    
     # parse command out into bytes
     msg = [int(command[i:i+2]) for i in range(len(command)) if not i%2]
 
@@ -13,8 +14,13 @@ def furnace_checksum(command):
 
     # it will be more useful to return this formatted as a string
     CRC = hex(CRC)[2:]
+    
+    # for some reason the furnace ones the bytes reversed -
+    # need to figure out if I'm understanding this correctly
+    CRC = CRC[2:]+CRC[:2]
+    
     return CRC
 
 # useful for debugging
 if __name__ == '__main__':
-    print(furnace_checksum('0507'))
+    print(furnace_checksum('0207'))
