@@ -16,6 +16,5 @@ equipment = {
 def startup(equipment):
     for device in equipment:
         operating_mode = MFC_command(equipment[device],'query_operating_mode')
-        print(device + ' is in ' + operating_mode + '.')
 
 startup(equipment)
