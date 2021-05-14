@@ -5,7 +5,7 @@ ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 # A file to house all the functions associated with MFC control.
 
 def MFC_command(MFC_ID,command_type,command_value=""):
-    command_dict = dict{
+    command_dict = {
         'set_flow':['SX!','Flow set to ',' sccm'],
         'change_address':['CA!','Flow set to ',''],
         'report_flow':['FX?','Flow reported to be ',' sccm'],

@@ -2,6 +2,6 @@
 #Creation Date: 2020-12-14
 #Columns: Helium,Hydrogen,Ethylene
 #Last Modified: 2020-12-15
-test1,4 C,abc,500,1
-test2,8 C,def,500,1000
-test3,2 C,ghi,35,did it work
+2,4,10,10,10
+5,8,20,20,30
+3,2,30,35,20
