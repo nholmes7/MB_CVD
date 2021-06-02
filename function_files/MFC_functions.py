@@ -54,11 +54,11 @@ class MFC:
         while not send_status:
             comm_attempts = comm_attempts + 1
             print('Sending: ' + str(command))
-            ser.write(command)
+            # ser.write(command)
             # reply = ser.read_until(expected=bytes(';','ascii'))
-            reply = ser.read_until(terminator=bytes(';','ascii'))
+            # reply = ser.read_until(terminator=bytes(';','ascii'))
             # append the checksum characters
-            reply = reply + ser.read(size=2)
+            # reply = reply + ser.read(size=2)
             reply = reply.decode('ascii',errors = 'ignore')
             print('Received: ' + str(reply))
             # Try except statement to deal with the frequent weirdness
@@ -132,16 +132,110 @@ class MFC:
 
 class furnace():
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self,address) -> None:
+        self.address = hex(address)[2:]
+        # If the address is only one char, add a leading zero for compatibility
+        # with methods
+        if len(self.address) == 1:
+            self.address = '0' + self.address
 
-    def SetTemp(self):
-        pass
+    def SetTemp(self,setpoint):
+        function_code = '10'
+        address = '001A'
+        no_of_words = '0001'
+        no_of_bytes = '02'
+        data = hex(setpoint)[2:]
+        response_length = 8
+        # Prepend leading zeros
+        while len(data) < 4:
+            data = '0' + data
+        command = self.address + function_code + address + no_of_words + \
+            no_of_bytes + data
+        CRC = self.__CRC(command)
+        command += CRC
+        try:
+            self.__SendCommand(command,response_length,function_code)
+        except Warning:
+            raise Warning('Unsuccessful communication with tube furnace.')
 
     def QueryTemp(self):
+        function_code = '03'
+        address = '0001'
+        no_of_words = '0001'
+        response_length = 5 + int(no_of_words,base=16)*2
+        command = self.address + function_code + address + no_of_words
+        CRC = self.__CRC(command)
+        command += CRC
+        try:
+            response = self.__SendCommand(command,response_length,function_code)
+        except Warning:
+            raise Warning('Unsuccessful communication with tube furnace.')
+        temperature = int(response[3:-2])
+        return temperature
+
+    def ChangeAddress(self,new_address):
         pass
     
+    def __SendCommand(self,command,response_length,function_code):
+        '''
+        Private method responsible for repeatedly sending the command until a
+        response is received with correct CRC and no error message.
+
+        Returns the raw bytes received
+        '''
+        command = bytearray.fromhex(command)
+        send_status = False
+        max_iter = 5
+        comm_attempts = 0
+        while not send_status:
+            comm_attempts = comm_attempts + 1
+            print('Sending: ' + str(command))
+            ser.write(command)
+            valid,error_flag,response = self.__ReceiveResponse(response_length,function_code)
+
+            if valid and not(error_flag):
+                send_status = True
+
+            if comm_attempts > max_iter:
+                raise Warning('Unsuccessful communication with tube furnace.')
+        return response
+
+    def __ReceiveResponse(self,response_length,function_code):
+        '''
+        Private method which listens for a MODBUS response.  Checks if the
+        response is an error message and inspects the CRC value.
+
+        Returns:
+            - valid: whether the CRC checks out
+            - error_flag: whether the message is an error message
+            - response: raw bytes received
+        '''
+        valid = False
+        error_flag = False
+        response = ser.read(size=2)
+        function_code = bytearray.fromhex(function_code)
+        
+        # Check the second byte to see if we have a legitimate response or an
+        # error message.  If we have an error message, the second byte will be
+        # the function code plus 128.
+        if response[1] == function_code:
+            response = response + ser.read(size=(response_length-2))
+        elif response[1] == function_code + 128:
+            response = response + ser.read(size=3)
+            error_flag = True
+
+        returned_CRC = response[-2:]
+        calculated_CRC = self.__CRC(response[:-2])
+        calculated_CRC = bytearray.fromhex(calculated_CRC)
+
+        if calculated_CRC == returned_CRC:
+            valid = True
+        
+        return valid, error_flag, response
+
     def __CRC(self,msg):
+        if type(msg) is str:
+            msg = bytearray.fromhex(msg)
         CRC = 0xFFFF
         for num in msg:
             CRC = CRC^num               # bitwise XOR
@@ -151,7 +245,14 @@ class furnace():
                 if flag:
                     CRC = CRC^0xA001
         
-        # For some reason they flip the bits...
+        # For some reason they flip the bit order...
         error_check_code = hex(CRC)[4:] + hex(CRC)[2:4]
+        error_check_code = error_check_code.upper()
 
         return error_check_code
+
+if __name__ == '__main__':
+    import serial
+    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+    test_furnace = furnace('02')
+    test_furnace.QueryTemp()
