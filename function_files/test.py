@@ -63,3 +63,7 @@
 # }
 
 # print(len(MFC_address_lookup))
+
+import serial
+
+print(serial.__version__)
