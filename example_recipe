@@ -1,6 +1,6 @@
 #Author: Nathaniel Holmes
 #Creation Date: 2020-12-14
-#Columns: Helium,Hydrogen,Ethylene
+#Columns: Time,Temp,Helium,Hydrogen,Ethylene
 #Last Modified: 2020-12-15
 2,4,10,10,10
 5,8,20,20,30
