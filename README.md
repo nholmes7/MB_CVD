@@ -11,3 +11,25 @@ A description of the files follows:
   * MFC_functions.py: functions for controlling the mass flow controllers
   * run_recipe.py: for funning the CVD recipes from text files
   * startup.py: code which runs on program startup in order to establish communication with all networked devices
+
+## Getting Started
+
+The following steps may be followed to get the CVD control software up and running on a new machine.
+
+### Prerequisites
+
+* Python
+
+```
+python -m pip install virtualenv
+```
+
+### Dependencies
+
+#### Linux
+
+```
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
