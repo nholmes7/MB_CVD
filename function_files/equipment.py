@@ -19,7 +19,7 @@ class MFC:
 
         SetFlow(set_point)
         ChangeAddress(new_address)
-        ReportFlow()
+        QueryFlow()
         QueryOpMode()
     '''
 
@@ -40,7 +40,7 @@ class MFC:
         except Warning:
             print('Unsuccessful communication with MFC ' + str(self.address))
 
-    def ReportFlow(self):
+    def QueryFlow(self):
         try:
             reply_text = self.__SendCommand('FX?')
             print('Flow reported as ' + reply_text + 'sccm.')

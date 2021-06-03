@@ -11,7 +11,7 @@ class recipe():
     Public Methods
     --------------
 
-        run()
+        run(log_freq)
     '''
 
     def __init__(self,filename,furnace,MFCs):
@@ -33,19 +33,19 @@ class recipe():
         self.flow_2 = [i[3] for i in self.steps]
         self.flow_3 = [i[4] for i in self.steps]
     
-    def run(self):
+    def run(self,log_freq=2):
         start_time = time.time()
         i = 0
         for time_step in self.times:
-            task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
-            task_2 = threading.Thread(target=self.mfc_1.SetFlow,args=(self.flow_1[i]))
-            task_3 = threading.Thread(target=self.mfc_2.SetFlow,args=(self.flow_2[i]))
-            task_4 = threading.Thread(target=self.mfc_3.SetFlow,args=(self.flow_3[i]))
+            # task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
+            # task_2 = threading.Thread(target=self.mfc_1.SetFlow,args=(self.flow_1[i]))
+            # task_3 = threading.Thread(target=self.mfc_2.SetFlow,args=(self.flow_2[i]))
+            # task_4 = threading.Thread(target=self.mfc_3.SetFlow,args=(self.flow_3[i]))
 
-            task_1.start()
-            task_2.start()
-            task_3.start()
-            task_4.start()
+            # task_1.start()
+            # task_2.start()
+            # task_3.start()
+            # task_4.start()
 
             # some print statements for debugging
             print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
@@ -58,8 +58,31 @@ class recipe():
 
             i = i + 1
 
+# Here follows code  which will be used for data logging when I get there.
+
+    # def __logging(self,freq,filename):
+    #     delay = 1/freq
+    #     while True:
+    #         params = self.__poll()
+    #         self.__write_to_file(filename,params)
+    #         time.sleep(delay)
+
+    # def __poll(self):
+    #     task_1 = threading.Thread(target=self.furnace.QueryTemp)
+    #     task_2 = threading.Thread(target=self.mfc_1.QueryFlow)
+    #     task_3 = threading.Thread(target=self.mfc_2.QueryFlow)
+    #     task_4 = threading.Thread(target=self.mfc_3.QueryFlow)
+
+    #     task_1.start()
+    #     task_2.start()
+    #     task_3.start()
+    #     task_4.start()
+
+    # def __write_to_file(self,filename,params):
+    #     pass
+    
 if __name__ == '__main__':
-    # from function_files.equipment import *
+    from equipment import *
     import threading, time
     test_recipe = recipe('example_recipe',1,[1,2,3])
     print(test_recipe.steps)
