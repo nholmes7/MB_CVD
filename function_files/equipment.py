@@ -13,6 +13,14 @@ class MFC:
     '''
     A class for the mass flow controllers in the system.  Includes methods 
     for controlling them.
+
+    Public Methods
+    --------------
+
+        SetFlow(set_point)
+        ChangeAddress(new_address)
+        ReportFlow()
+        QueryOpMode()
     '''
 
     def __init__(self,address):
@@ -43,8 +51,10 @@ class MFC:
         try:
             reply_text = self.__SendCommand('OM?')
             print('MFC is in ' + reply_text)
+            return True
         except Warning:
             print('Unsuccessful communication with MFC ' + str(self.address))
+            return False
 
     def __SendCommand(self,command_text,command_value=''):
         command = self.__BuildCommand(command_text,command_value)
@@ -131,6 +141,17 @@ class MFC:
         return hex(char_sum)[-2:].upper()
 
 class furnace():
+    '''
+    A class for the tube furnace in the system.  Includes methods for control.
+
+    Public Methods
+    --------------
+
+        SetTemp(setpoint)
+        QueryTemp()
+        ChangeAddress()
+        ReportStatus()
+    '''
 
     def __init__(self,address) -> None:
         self.address = hex(address)[2:]
@@ -174,6 +195,9 @@ class furnace():
         return temperature
 
     def ChangeAddress(self,new_address):
+        pass
+
+    def ReportStatus(self):
         pass
     
     def __SendCommand(self,command,response_length,function_code):
@@ -254,5 +278,5 @@ class furnace():
 if __name__ == '__main__':
     import serial
     ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
-    test_furnace = furnace('02')
-    test_furnace.QueryTemp()
+    # test_furnace = furnace('02')
+    # test_furnace.QueryTemp()
