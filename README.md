@@ -7,10 +7,9 @@ A description of the files follows:
 * gui.py: the result of compiling the CVD.ui file with pyuic5
 * example_recipe: demonstrates the formatting required for the CVD recipe
 * function_files
-  * furnace_functions.py functions for controlling the tube furnace
-  * MFC_functions.py: functions for controlling the mass flow controllers
-  * run_recipe.py: for funning the CVD recipes from text files
-  * startup.py: code which runs on program startup in order to establish communication with all networked devices
+  * equipment.py: defines classes for the different types of equipment used in the system with methods for controlling them
+  * recipe.py: recipe class for handling recipes
+  * startup.py: function which is called on program startup in order to establish communication with all networked devices
 
 ## Getting Started
 
