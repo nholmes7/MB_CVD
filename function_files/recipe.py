@@ -17,7 +17,7 @@ class recipe():
         sequential list of recipe step times
     temps: list
         sequential list of recipe furnace temperatures
-    flows: dict
+    flow: dict
         dictionary of lists
     
 
@@ -67,21 +67,24 @@ class recipe():
         # Initialize the equipment objects
         self.furnace = None
         self.MFCs = {}
+        # Initialize the recipe sequence lists
+        self.times = []
+        self.temps = []
+        self.flow = {}
 
-        # Define the equipment
+        # Define the equipment based on the column labels and define the recipe
+        # sequence lists
+        i = 0
         for column in columns:
             if column == 'Time':
-                pass
+                self.times = [j[i] for j in self.steps]
             elif column == 'Temp':
                 self.furnace = furnace(150)
+                self.temps = [j[i] for j in self.steps]
             else:
                 self.MFCs[column] = MFC(recipe.MFC_address_lookup[column])
-
-        self.times = [i[0] for i in self.steps]
-        self.temps = [i[1] for i in self.steps]
-        self.flow_1 = [i[2] for i in self.steps]
-        self.flow_2 = [i[3] for i in self.steps]
-        self.flow_3 = [i[4] for i in self.steps]
+                self.flow[column] = [j[i] for j in self.steps]
+            i = i + 1
     
     def run(self,log_freq=2):
         start_time = time.time()
@@ -100,12 +103,10 @@ class recipe():
             # some print statements for debugging
             print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
             print('Setting temperature to ' + str(self.temps[i]))
-            print('Setting gas 1 to ' + str(self.flow_1[i]))
-            print('Setting gas 2 to ' + str(self.flow_2[i]))
-            print('Setting gas 3 to ' + str(self.flow_3[i]))
+            for gas in self.flow:
+                print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
 
             time.sleep(time_step)
-
             i = i + 1
 
     def initialize(self):
@@ -158,5 +159,6 @@ if __name__ == '__main__':
     from equipment import *
     import threading, time
     test_recipe = recipe('example_recipe')
-    print(test_recipe.steps)
-    print(test_recipe.MFCs['Helium'].address)
+    # print(test_recipe.steps)
+    # print(test_recipe.flow)
+    test_recipe.run()
