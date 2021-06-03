@@ -277,6 +277,6 @@ class furnace():
 
 if __name__ == '__main__':
     import serial
-    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
     # test_furnace = furnace('02')
     # test_furnace.QueryTemp()

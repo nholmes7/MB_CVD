@@ -1,46 +1,66 @@
-from MFC_functions import MFC_command
-import threading, time
+'''
+Defines a recipe class.  Recipes are defined from a CSV file containing the
+sequential instructions.  Furnace and MFC objects are also passed in for the
+recipe to use.
+'''
 
-def run_recipe():
-    MFC_1 = 101
-    MFC_2 = 102
-    MFC_3 = 103
+class recipe():
+    '''
+    A class for the recipes that will be used for the tube furnace CVD system.
 
-    recipe = []
+    Public Methods
+    --------------
 
-    with open('example_recipe','r') as file:
-        for line in file:
-            if line[0] != '#':
-                print(line)
-                recipe.append(line[:-1].split(','))
+        run()
+    '''
 
-    recipe = [[float(j) for j in i] for i in recipe]
-    time_points = [i[0] for i in recipe]
-    temp_points = [i[1] for i in recipe]
-    gas_1_points = [i[2] for i in recipe]
-    gas_2_points = [i[3] for i in recipe]
-    gas_3_points = [i[4] for i in recipe]
+    def __init__(self,filename,furnace,MFCs):
+        self.steps = []
+        with open(filename,'r') as file:
+            for line in file:
+                if line[0] != '#':
+                    self.steps.append(line[:-1].split(','))
+        # Convert strings to numbers.
+        self.steps = [[float(j) for j in i] for i in self.steps]
+        self.furnace = furnace
+        self.mfc_1 = MFCs[0]
+        self.mfc_2 = MFCs[1]
+        self.mfc_3 = MFCs[2]
 
-    # loop through the recipe instructions
-    start_time = time.time()
-    i = 0
-    for time_step in time_points:
-        # use threading for setting the flows so the program doesn't hang
-        MFC1_task = threading.Thread(target=MFC_command,args=(MFC_1,'set_flow',gas_1_points[i]))
-        MFC2_task = threading.Thread(target=MFC_command,args=(MFC_2,'set_flow',gas_2_points[i]))
-        MFC3_task = threading.Thread(target=MFC_command,args=(MFC_3,'set_flow',gas_3_points[i]))
+        self.times = [i[0] for i in self.steps]
+        self.temps = [i[1] for i in self.steps]
+        self.flow_1 = [i[2] for i in self.steps]
+        self.flow_2 = [i[3] for i in self.steps]
+        self.flow_3 = [i[4] for i in self.steps]
+    
+    def run(self):
+        start_time = time.time()
+        i = 0
+        for time_step in self.times:
+            task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
+            task_2 = threading.Thread(target=self.mfc_1.SetFlow,args=(self.flow_1[i]))
+            task_3 = threading.Thread(target=self.mfc_2.SetFlow,args=(self.flow_2[i]))
+            task_4 = threading.Thread(target=self.mfc_3.SetFlow,args=(self.flow_3[i]))
 
-        MFC1_task.start()
-        MFC2_task.start()
-        MFC3_task.start()
+            task_1.start()
+            task_2.start()
+            task_3.start()
+            task_4.start()
 
-        # some print statements for debugging
-        print('Setting temperature to ' + str(temp_points[i]))
-        print('Setting gas 1 to ' + str(gas_1_points[i]))
-        print('Setting gas 2 to ' + str(gas_2_points[i]))
-        print('Setting gas 3 to ' + str(gas_3_points[i]))
-        print(str(time.time()-start_time))
+            # some print statements for debugging
+            print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
+            print('Setting temperature to ' + str(self.temps[i]))
+            print('Setting gas 1 to ' + str(self.flow_1[i]))
+            print('Setting gas 2 to ' + str(self.flow_2[i]))
+            print('Setting gas 3 to ' + str(self.flow_3[i]))
 
-        time.sleep(time_step)
+            time.sleep(time_step)
 
-        i = i + 1
+            i = i + 1
+
+if __name__ == '__main__':
+    # from function_files.equipment import *
+    import threading, time
+    test_recipe = recipe('example_recipe',1,[1,2,3])
+    print(test_recipe.steps)
+    test_recipe.run()

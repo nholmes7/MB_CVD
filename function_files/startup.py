@@ -41,4 +41,4 @@ if __name__ == '__main__':
     import sys
     sys.path.append('.')
     from function_files.equipment import *
-    startup(devices)
+    startup()
