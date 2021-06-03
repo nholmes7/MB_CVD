@@ -1,31 +1,81 @@
-'''
-Defines a recipe class.  Recipes are defined from a CSV file containing the
-sequential instructions.  Furnace and MFC objects are also passed in for the
-recipe to use.
-'''
-
 class recipe():
     '''
     A class for the recipes that will be used for the tube furnace CVD system.
 
+    ...
+
+    Attributes
+    ----------
+    steps: list
+        nested list of all the recipe steps
+    furnace: furnace object
+        instance of the furnace class
+    MFCs: dict
+        dictionary of the instances of the MFC class, done so that the MFCs may
+        be dynamically created based on the recipe
+    times: list
+        sequential list of recipe step times
+    temps: list
+        sequential list of recipe furnace temperatures
+    flows: dict
+        dictionary of lists
+    
+
     Public Methods
     --------------
-
-        run(log_freq)
+    run(log_freq)
+    initialize()
     '''
 
-    def __init__(self,filename,furnace,MFCs):
+    MFC_address_lookup = {
+        'Ethylene':101,
+        'C2H4':101,
+        'C2h4':101,
+        'c2h4':101,
+        'ethylene':101,
+        'ETHYLENE':101,
+        'Argon':102,
+        'Ar':102,
+        'AR':102,
+        'argon':102,
+        'ARGON':102,
+        'ar':102,
+        'Helium':103,
+        'He':103,
+        'HE':103,
+        'helium':103,
+        'HELIUM':103,
+        'he':103,
+        'Hydrogen':104,
+        'H2':104,
+        'h2':104,
+        'hydrogen':104,
+        'HYDROGEN':104
+    }
+
+    def __init__(self,filename):
         self.steps = []
         with open(filename,'r') as file:
             for line in file:
                 if line[0] != '#':
                     self.steps.append(line[:-1].split(','))
+                if line[:8] == '#Columns':
+                    columns = line[10:-1].split(',')
         # Convert strings to numbers.
         self.steps = [[float(j) for j in i] for i in self.steps]
-        self.furnace = furnace
-        self.mfc_1 = MFCs[0]
-        self.mfc_2 = MFCs[1]
-        self.mfc_3 = MFCs[2]
+        
+        # Initialize the equipment objects
+        self.furnace = None
+        self.MFCs = {}
+
+        # Define the equipment
+        for column in columns:
+            if column == 'Time':
+                pass
+            elif column == 'Temp':
+                self.furnace = furnace(150)
+            else:
+                self.MFCs[column] = MFC(recipe.MFC_address_lookup[column])
 
         self.times = [i[0] for i in self.steps]
         self.temps = [i[1] for i in self.steps]
@@ -58,6 +108,29 @@ class recipe():
 
             i = i + 1
 
+    def initialize(self):
+        '''
+        Verifies the status of the devices required by the recipe.
+
+            Parameters:
+                self
+            Returns:
+                success (bool): whether communication was established with all
+                devices
+        '''
+        pass
+        # a = self.furnace.ReportStatus()
+        # b = self.mfc_1.QueryOpMode()
+        # c = self.mfc_2.QueryOpMode()
+        # d = self.mfc_3.QueryOpMode()
+
+        # if a and b and c and d:
+        #     return True
+        # else:
+        #     return False
+        
+
+    
 # Here follows code  which will be used for data logging when I get there.
 
     # def __logging(self,freq,filename):
@@ -84,6 +157,6 @@ class recipe():
 if __name__ == '__main__':
     from equipment import *
     import threading, time
-    test_recipe = recipe('example_recipe',1,[1,2,3])
+    test_recipe = recipe('example_recipe')
     print(test_recipe.steps)
-    test_recipe.run()
+    print(test_recipe.MFCs['Helium'].address)
