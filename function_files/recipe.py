@@ -90,15 +90,21 @@ class recipe():
         start_time = time.time()
         i = 0
         for time_step in self.times:
-            # Set it up with no threading to start for simplicity and to get the
-            # bugs worked out.
-            # Check to see if we have a furnace.
-            if self.furnace:
-                self.furnace.SetTemp(temps[i])
-            # Check to see if we have MFCs.
-            if self.MFCs:
-                for gas in self.MFCs:
-                    self.MFCs[gas].SetFlow(self.flow[gas][i])
+            # # Set it up with no threading to start for simplicity and to get the
+            # # bugs worked out.
+            # # Check to see if we have a furnace.
+            # if self.furnace:
+            #     self.furnace.SetTemp(temps[i])
+            # # Check to see if we have MFCs.
+            # if self.MFCs:
+            #     for gas in self.MFCs:
+            #         if i > 0:
+            #             if self.flow[gas][i] == self.flow[gas][i-1]:
+            #                 pass
+            #             else:
+            #                 self.MFCs[gas].SetFlow(self.flow[gas][i])
+            #         else:
+            #             self.MFCs[gas].SetFlow(self.flow[gas][i])
             
             # Now with threading...
             # task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
@@ -119,7 +125,13 @@ class recipe():
             # Check to see if we have MFCs.
             if self.MFCs:
                 for gas in self.flow:
-                    print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
+                    if i > 0:
+                        if self.flow[gas][i] == self.flow[gas][i-1]:
+                            pass
+                        else:
+                            print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
+                    else:
+                        print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
 
             time.sleep(time_step)
             i = i + 1
@@ -179,8 +191,8 @@ class recipe():
     #     pass
     
 if __name__ == '__main__':
-    import serial
-    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
+    # import serial
+    # ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
     from equipment import *
     import threading, time
     test_recipe = recipe('example_recipe')

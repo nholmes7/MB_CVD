@@ -1,7 +1,7 @@
 #Author: Nathaniel Holmes
 #Creation Date: 2020-12-14
-#Columns: Time,Temp,Helium,Hydrogen,Ethylene
 #Last Modified: 2020-12-15
-2,4,10,10,10
-5,8,20,20,30
-3,2,30,35,20
+#Columns: Time,Argon,Helium
+10,200,0
+5,500,0
+10,500,500
