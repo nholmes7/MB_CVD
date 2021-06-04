@@ -53,7 +53,7 @@ class recipe():
         'HYDROGEN':104
     }
 
-    def __init__(self,filename):
+    def __init__(self,filename) -> None:
         self.steps = []
         with open(filename,'r') as file:
             for line in file:
@@ -90,6 +90,17 @@ class recipe():
         start_time = time.time()
         i = 0
         for time_step in self.times:
+            # Set it up with no threading to start for simplicity and to get the
+            # bugs worked out.
+            # Check to see if we have a furnace.
+            if self.furnace:
+                self.furnace.SetTemp(temps[i])
+            # Check to see if we have MFCs.
+            if self.MFCs:
+                for gas in self.MFCs:
+                    self.MFCs[gas].SetFlow(self.flow[gas][i])
+            
+            # Now with threading...
             # task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
             # task_2 = threading.Thread(target=self.mfc_1.SetFlow,args=(self.flow_1[i]))
             # task_3 = threading.Thread(target=self.mfc_2.SetFlow,args=(self.flow_2[i]))
@@ -100,11 +111,15 @@ class recipe():
             # task_3.start()
             # task_4.start()
 
-            # some print statements for debugging
+            # Some print statements for debugging.
             print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
-            print('Setting temperature to ' + str(self.temps[i]))
-            for gas in self.flow:
-                print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
+            # Check to see if we have a furnace.
+            if self.furnace:
+                print('Setting temperature to ' + str(self.temps[i]))
+            # Check to see if we have MFCs.
+            if self.MFCs:
+                for gas in self.flow:
+                    print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
 
             time.sleep(time_step)
             i = i + 1
@@ -119,16 +134,24 @@ class recipe():
                 success (bool): whether communication was established with all
                 devices
         '''
-        pass
-        # a = self.furnace.ReportStatus()
-        # b = self.mfc_1.QueryOpMode()
-        # c = self.mfc_2.QueryOpMode()
-        # d = self.mfc_3.QueryOpMode()
+        success = []
 
-        # if a and b and c and d:
-        #     return True
-        # else:
-        #     return False
+        if self.furnace:
+            status = self.furnace.ReportStatus()
+            success.append(status)
+        if self.MFCs:
+            for gas in self.flow:
+                status = self.flow[gas].QueryOpMode()
+                success.append(status)
+
+        success = all(success)
+
+        if success:
+            print('Communication established with all required devices.')
+        else:
+            print('Unable to establish communication with all devices.')
+
+        return success
         
 
     
@@ -156,6 +179,8 @@ class recipe():
     #     pass
     
 if __name__ == '__main__':
+    import serial
+    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
     from equipment import *
     import threading, time
     test_recipe = recipe('example_recipe')

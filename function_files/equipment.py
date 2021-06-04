@@ -14,16 +14,22 @@ class MFC:
     A class for the mass flow controllers in the system.  Includes methods 
     for controlling them.
 
+    ...
+
+    Attributes
+    ----------
+    address: int
+        the address used for serial comms
+
     Public Methods
     --------------
-
-        SetFlow(set_point)
-        ChangeAddress(new_address)
-        QueryFlow()
-        QueryOpMode()
+    SetFlow(set_point)
+    ChangeAddress(new_address)
+    QueryFlow()
+    QueryOpMode()
     '''
 
-    def __init__(self,address):
+    def __init__(self,address) -> None:
         self.address = address
 
     def SetFlow(self,set_point):
@@ -140,17 +146,23 @@ class MFC:
         char_sum = sum(response)
         return hex(char_sum)[-2:].upper()
 
-class furnace():
+class furnace:
     '''
     A class for the tube furnace in the system.  Includes methods for control.
 
+    ...
+
+    Attributes
+    ----------
+    address: str
+        the address used for serial comms over MODBUS as a two digit hex byte
+
     Public Methods
     --------------
-
-        SetTemp(setpoint)
-        QueryTemp()
-        ChangeAddress()
-        ReportStatus()
+    SetTemp(setpoint)
+    QueryTemp()
+    ChangeAddress()
+    ReportStatus()
     '''
 
     def __init__(self,address) -> None:
@@ -198,7 +210,21 @@ class furnace():
         pass
 
     def ReportStatus(self):
-        pass
+        function_code = '03'
+        response_length = 5
+        command = self.address + function_code
+        CRC = self.__CRC(command)
+        command += CRC
+        try:
+            response = self.__SendCommand(command,response_length,function_code)
+        except Warning:
+            raise Warning('Unsuccessful communication with tube furnace.')
+        
+        # If we want to actually check the status we can throw some code in here
+        # in the future.  Otherwise as long as we didn't get the unsuccessful
+        # comms warning then we'll assume everything is functioning as intended.
+        return True
+
     
     def __SendCommand(self,command,response_length,function_code):
         '''
