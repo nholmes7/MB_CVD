@@ -29,13 +29,15 @@ class MFC:
     QueryOpMode()
     '''
 
+    import serial
+    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
+
     def __init__(self,address) -> None:
         self.address = address
 
     def SetFlow(self,set_point):
         try:
-            reply_text = self.__SendCommand('SX!',set_point)
-            print('Flow set to ' + reply_text + 'sccm.')
+            self.__SendCommand('SX!',set_point)
         except Warning:
             print('Unsuccessful communication with MFC ' + str(self.address))
 
@@ -70,11 +72,11 @@ class MFC:
         while not send_status:
             comm_attempts = comm_attempts + 1
             print('Sending: ' + str(command))
-            # ser.write(command)
-            # reply = ser.read_until(expected=bytes(';','ascii'))
-            # reply = ser.read_until(terminator=bytes(';','ascii'))
+            MFC.ser.write(command)
+            reply = MFC.ser.read_until(expected=bytes(';','ascii'))
+            # reply = MFC.ser.read_until(terminator=bytes(';','ascii'))
             # append the checksum characters
-            # reply = reply + ser.read(size=2)
+            reply = reply + MFC.ser.read(size=2)
             reply = reply.decode('ascii',errors = 'ignore')
             print('Received: ' + str(reply))
             # Try except statement to deal with the frequent weirdness

@@ -90,33 +90,6 @@ class recipe():
         start_time = time.time()
         i = 0
         for time_step in self.times:
-            # # Set it up with no threading to start for simplicity and to get the
-            # # bugs worked out.
-            # # Check to see if we have a furnace.
-            # if self.furnace:
-            #     self.furnace.SetTemp(temps[i])
-            # # Check to see if we have MFCs.
-            # if self.MFCs:
-            #     for gas in self.MFCs:
-            #         if i > 0:
-            #             if self.flow[gas][i] == self.flow[gas][i-1]:
-            #                 pass
-            #             else:
-            #                 self.MFCs[gas].SetFlow(self.flow[gas][i])
-            #         else:
-            #             self.MFCs[gas].SetFlow(self.flow[gas][i])
-            
-            # Now with threading...
-            # task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
-            # task_2 = threading.Thread(target=self.mfc_1.SetFlow,args=(self.flow_1[i]))
-            # task_3 = threading.Thread(target=self.mfc_2.SetFlow,args=(self.flow_2[i]))
-            # task_4 = threading.Thread(target=self.mfc_3.SetFlow,args=(self.flow_3[i]))
-
-            # task_1.start()
-            # task_2.start()
-            # task_3.start()
-            # task_4.start()
-
             # Some print statements for debugging.
             print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
             # Check to see if we have a furnace.
@@ -132,6 +105,33 @@ class recipe():
                             print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
                     else:
                         print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
+            
+            # Set it up with no threading to start for simplicity and to get the
+            # bugs worked out.
+            # Check to see if we have a furnace.
+            if self.furnace:
+                self.furnace.SetTemp(self.temps[i])
+            # Check to see if we have MFCs.
+            if self.MFCs:
+                for gas in self.MFCs:
+                    if i > 0:
+                        if self.flow[gas][i] == self.flow[gas][i-1]:
+                            pass
+                        else:
+                            self.MFCs[gas].SetFlow(self.flow[gas][i])
+                    else:
+                        self.MFCs[gas].SetFlow(self.flow[gas][i])
+            
+            # Now with threading...
+            # task_1 = threading.Thread(target=self.furnace.SetTemp,args=(self.temps[i]))
+            # task_2 = threading.Thread(target=self.mfc_1.SetFlow,args=(self.flow_1[i]))
+            # task_3 = threading.Thread(target=self.mfc_2.SetFlow,args=(self.flow_2[i]))
+            # task_4 = threading.Thread(target=self.mfc_3.SetFlow,args=(self.flow_3[i]))
+
+            # task_1.start()
+            # task_2.start()
+            # task_3.start()
+            # task_4.start()
 
             time.sleep(time_step)
             i = i + 1
@@ -153,7 +153,7 @@ class recipe():
             success.append(status)
         if self.MFCs:
             for gas in self.flow:
-                status = self.flow[gas].QueryOpMode()
+                status = self.MFCs[gas].QueryOpMode()
                 success.append(status)
 
         success = all(success)
@@ -198,4 +198,5 @@ if __name__ == '__main__':
     test_recipe = recipe('example_recipe')
     # print(test_recipe.steps)
     # print(test_recipe.flow)
-    test_recipe.run()
+    # test_recipe.run()
+    test_recipe.initialize()

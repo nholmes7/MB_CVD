@@ -2,6 +2,7 @@
 #Creation Date: 2020-12-14
 #Last Modified: 2020-12-15
 #Columns: Time,Argon,Helium
-10,200,0
-5,500,0
-10,500,500
+10,50,0
+5,150,0
+10,150,500
+5,0,0
