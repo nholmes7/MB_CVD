@@ -79,7 +79,7 @@ class recipe():
             if column == 'Time':
                 self.times = [j[i] for j in self.steps]
             elif column == 'Temp':
-                self.furnace = furnace(150)
+                self.furnace = furnace(5)
                 self.temps = [j[i] for j in self.steps]
             else:
                 self.MFCs[column] = MFC(recipe.MFC_address_lookup[column])
@@ -176,7 +176,17 @@ class recipe():
     #         self.__write_to_file(filename,params)
     #         time.sleep(delay)
 
-    # def __poll(self):
+    def poll(self):
+        # Set it up with no threading to start for simplicity and to get the
+        # bugs worked out.
+        # Check to see if we have a furnace.
+        if self.furnace:
+            self.furnace.QueryTemp()
+        # Check to see if we have MFCs.
+        if self.MFCs:
+            for gas in self.MFCs:
+                self.MFCs[gas].QueryFlow()
+
     #     task_1 = threading.Thread(target=self.furnace.QueryTemp)
     #     task_2 = threading.Thread(target=self.mfc_1.QueryFlow)
     #     task_3 = threading.Thread(target=self.mfc_2.QueryFlow)
@@ -186,6 +196,7 @@ class recipe():
     #     task_2.start()
     #     task_3.start()
     #     task_4.start()
+
 
     # def __write_to_file(self,filename,params):
     #     pass
@@ -198,5 +209,6 @@ if __name__ == '__main__':
     test_recipe = recipe('example_recipe')
     # print(test_recipe.steps)
     # print(test_recipe.flow)
-    # test_recipe.run()
-    test_recipe.initialize()
+    test_recipe.run()
+    # test_recipe.initialize()
+    # test_recipe.poll()

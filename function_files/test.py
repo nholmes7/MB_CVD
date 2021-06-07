@@ -64,6 +64,15 @@
 
 # print(len(MFC_address_lookup))
 
-import serial
+# import serial
 
-print(serial.__version__)
+# print(serial.__version__)
+
+test_string = '050342E1'
+test_bytes = bytes.fromhex(test_string)
+
+print(test_string)
+print(test_bytes)
+
+testy = b'\x10\xe4'
+print(testy[0])

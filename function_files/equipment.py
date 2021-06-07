@@ -167,6 +167,9 @@ class furnace:
     ReportStatus()
     '''
 
+    import serial
+    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
+
     def __init__(self,address) -> None:
         self.address = hex(address)[2:]
         # If the address is only one char, add a leading zero for compatibility
@@ -176,7 +179,7 @@ class furnace:
 
     def SetTemp(self,setpoint):
         function_code = '10'
-        address = '001A'
+        address = '0077'
         no_of_words = '0001'
         no_of_bytes = '02'
         data = hex(setpoint)[2:]
@@ -205,14 +208,15 @@ class furnace:
             response = self.__SendCommand(command,response_length,function_code)
         except Warning:
             raise Warning('Unsuccessful communication with tube furnace.')
-        temperature = int(response[3:-2])
+        temperature = int.from_bytes(response[3:-2],byteorder='big')
+        print('Temperature is: ' + str(temperature) + 'C.')
         return temperature
 
     def ChangeAddress(self,new_address):
         pass
 
     def ReportStatus(self):
-        function_code = '03'
+        function_code = '07'
         response_length = 5
         command = self.address + function_code
         CRC = self.__CRC(command)
@@ -235,18 +239,20 @@ class furnace:
 
         Returns the raw bytes received
         '''
-        command = bytearray.fromhex(command)
+        print('Command before byte conversion: ' + command)
+        command = bytes.fromhex(command)
         send_status = False
         max_iter = 5
         comm_attempts = 0
         while not send_status:
             comm_attempts = comm_attempts + 1
             print('Sending: ' + str(command))
-            ser.write(command)
+            furnace.ser.write(command)
             valid,error_flag,response = self.__ReceiveResponse(response_length,function_code)
 
             if valid and not(error_flag):
                 send_status = True
+                print('Received: ' + str(response))
 
             if comm_attempts > max_iter:
                 raise Warning('Unsuccessful communication with tube furnace.')
@@ -264,16 +270,17 @@ class furnace:
         '''
         valid = False
         error_flag = False
-        response = ser.read(size=2)
-        function_code = bytearray.fromhex(function_code)
+        response = furnace.ser.read(size=2)
+        print(response)
+        function_code = int.from_bytes(bytes.fromhex(function_code),byteorder='big')
         
         # Check the second byte to see if we have a legitimate response or an
         # error message.  If we have an error message, the second byte will be
         # the function code plus 128.
         if response[1] == function_code:
-            response = response + ser.read(size=(response_length-2))
+            response = response + furnace.ser.read(size=(response_length-2))
         elif response[1] == function_code + 128:
-            response = response + ser.read(size=3)
+            response = response + furnace.ser.read(size=3)
             error_flag = True
 
         returned_CRC = response[-2:]
@@ -298,13 +305,13 @@ class furnace:
                     CRC = CRC^0xA001
         
         # For some reason they flip the bit order...
+        # error_check_code = hex(CRC)[2:]
         error_check_code = hex(CRC)[4:] + hex(CRC)[2:4]
         error_check_code = error_check_code.upper()
 
         return error_check_code
 
 if __name__ == '__main__':
-    import serial
-    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
-    # test_furnace = furnace('02')
-    # test_furnace.QueryTemp()
+    test_furnace = furnace(5)
+    test_furnace.QueryTemp()
+    test_furnace.SetTemp(50)
