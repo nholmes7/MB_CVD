@@ -19,7 +19,8 @@ class recipe():
         sequential list of recipe furnace temperatures
     flow: dict
         dictionary of lists
-    
+    log_initialize: bool
+        tracks whether the log file has been written to yet
 
     Public Methods
     --------------
@@ -54,6 +55,7 @@ class recipe():
     }
 
     def __init__(self,filename) -> None:
+        self.log_initialize = False
         self.steps = []
         with open(filename,'r') as file:
             for line in file:
@@ -169,23 +171,45 @@ class recipe():
     
 # Here follows code  which will be used for data logging when I get there.
 
-    # def __logging(self,freq,filename):
-    #     delay = 1/freq
-    #     while True:
-    #         params = self.__poll()
-    #         self.__write_to_file(filename,params)
-    #         time.sleep(delay)
+    def __logging(self,freq,filename):
+        '''
+        Logs the operating parameters at a given frequency.
+
+            Parameters:
+                freq (float): logging frequency in Hz
+                filename (str): filename including the file extension
+            Returns:
+                None
+        '''
+        delay = 1/freq
+        # while True:
+        for i in range(100):
+            params = self.poll()
+            self.__write_to_file(filename,params)
+            time.sleep(delay)
 
     def poll(self):
+        '''
+        Polls all devices to query current operating parameters.
+
+            Parameters:
+                None
+            Returns:
+                current_params (dict): a dictionary of all the current operating
+                    parameters
+        '''
+        current_params = {}
         # Set it up with no threading to start for simplicity and to get the
         # bugs worked out.
         # Check to see if we have a furnace.
         if self.furnace:
-            self.furnace.QueryTemp()
+            current_params['Temp'] = self.furnace.QueryTemp()
         # Check to see if we have MFCs.
         if self.MFCs:
             for gas in self.MFCs:
-                self.MFCs[gas].QueryFlow()
+                current_params[gas] = self.MFCs[gas].QueryFlow()
+
+        return self.current_params
 
     #     task_1 = threading.Thread(target=self.furnace.QueryTemp)
     #     task_2 = threading.Thread(target=self.mfc_1.QueryFlow)
@@ -198,14 +222,40 @@ class recipe():
     #     task_4.start()
 
 
-    # def __write_to_file(self,filename,params):
-    #     pass
+    def __write_to_file(self,filename,params):
+        '''
+        Write the current process parameters to a file.
+
+            Parameters:
+                filename (str): filename including the file extension
+                params (dict): the current process parameters as read from the
+                    networked devices
+            Returns:
+                None
+        '''
+        # If this is the first time writing to the log, delete the file contents
+        # if that file already exists.
+        if self.log_initialize == False:
+            with open(filename,'w') as file:
+                # By taking no action, we will in fact delete the file's
+                # contents
+                pass
+
+        fieldnames = [name for name in params]
+        
+        with open(filename,'a') as file:
+            log_writer = csv.DictWriter(file, fieldnames=fieldnames)
+            if self.log_initialize == False:
+                # Add code to write the date and time here
+                log_writer.writeheader()
+                self.log_initialize = True
+            log_writer.writerow(params)
     
 if __name__ == '__main__':
     # import serial
     # ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
     from equipment import *
-    import threading, time
+    import threading, time, csv
     test_recipe = recipe('example_recipe')
     # print(test_recipe.steps)
     # print(test_recipe.flow)

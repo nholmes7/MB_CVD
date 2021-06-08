@@ -68,11 +68,6 @@
 
 # print(serial.__version__)
 
-test_string = '050342E1'
-test_bytes = bytes.fromhex(test_string)
-
-print(test_string)
-print(test_bytes)
-
-testy = b'\x10\xe4'
-print(testy[0])
+with open('test_log','w') as file:
+    pass
+    # file.write('abc')

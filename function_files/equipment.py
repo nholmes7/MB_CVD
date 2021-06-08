@@ -36,12 +36,28 @@ class MFC:
         self.address = address
 
     def SetFlow(self,set_point):
+        '''
+        Set a flow rate for an MFC object.
+
+            Parameters:
+                set_point (float): the desired set point
+            Returns:
+                None
+        '''
         try:
             self.__SendCommand('SX!',set_point)
         except Warning:
             print('Unsuccessful communication with MFC ' + str(self.address))
 
     def ChangeAddress(self,new_address):
+        '''
+        Changes the serial address of an existing MFC object.
+
+            Parameters:
+                new_address (int): the updated address
+            Returns:
+                None
+        '''
         try:
             reply_text = self.__SendCommand('CA!',new_address)
             print('Address set to ' + reply_text)
@@ -49,13 +65,32 @@ class MFC:
             print('Unsuccessful communication with MFC ' + str(self.address))
 
     def QueryFlow(self):
+        '''
+        Queries the current flow rate of an MFC object.
+
+            Parameters:
+                None
+            Returns:
+                flow_rate (float): the mass flow rate measured by the device
+        '''
         try:
             reply_text = self.__SendCommand('FX?')
             print('Flow reported as ' + reply_text + 'sccm.')
+            flow_rate = float(reply_text)
+            return flow_rate
         except Warning:
             print('Unsuccessful communication with MFC ' + str(self.address))
 
     def QueryOpMode(self):
+        '''
+        Checks to see if the MFC is in run mode or in ______ mode.
+
+            Parameters:
+                None
+            Returns:
+                boolean value which indicates whether communication with MFC was
+                successful
+        '''
         try:
             reply_text = self.__SendCommand('OM?')
             print('MFC is in ' + reply_text)
@@ -65,6 +100,20 @@ class MFC:
             return False
 
     def __SendCommand(self,command_text,command_value=''):
+        '''
+        Send a command to an MFC object over serial connection.
+
+            Parameters:
+                command_text (str): the portion of the serial message containing
+                    the unique command identifier
+                command_value (str): an optional argument when an additional
+                    value is required, such as the mass flow rate value when
+                    setting a new mass flow rate
+            Returns:
+                returned_text (str): the portion of the returned serial message 
+                    between the 'ACK', and the end of message character ';' -
+                    sometimes empty depending on the command.
+        '''
         command = self.__BuildCommand(command_text,command_value)
         send_status = False
         max_iter = 5
@@ -102,6 +151,19 @@ class MFC:
         return returned_text
 
     def __BuildCommand(self,command_text,command_value):
+        '''
+        Builds the command as per the MFC serial comms specifications.
+
+            Parameters:
+                command_text (str): the portion of the serial message containing
+                    the unique command identifier
+                command_value (str): an optional argument when an additional
+                    value is required, such as the mass flow rate value when
+                    setting a new mass flow rate
+            Returns:
+                command (ascii bytes): a string of the complete command, 
+                    including a checksum value at the end
+        '''
         command = '@@@' + str(self.address) + command_text + str(command_value) + ';'
         command = command + self.__CommandChecksum(command)
         command = bytes(command,'ascii')
@@ -112,6 +174,12 @@ class MFC:
         Determines whether the response received over the serial comms is valid.
         A valid response contains the string "ACK" and the checksum needs to
         match the calculated value.
+
+            Parameters:
+                response (str): the reply message from the MFC
+            Returns:
+                boolean value indicating whether the response contains the 'ACK'
+                string and the checksum is correct
         '''
         valid = False
         checksum = response[-2:]
@@ -127,7 +195,12 @@ class MFC:
         '''
         Function drops a checksum value if present, drops any leading @ symbols,
         and then calculates the checksum by summing the ASCII values, and
-        returning the last two hexadecimal digites of the sum value. 
+        returning the last two hexadecimal digites of the sum value.
+
+            Parameters:
+                command (str): the command to send
+            Returns:
+                a hex number in string form which represents the checksum value
         '''
         command,_ = command.split(';')
         command = command + ';'
@@ -141,6 +214,11 @@ class MFC:
         '''
         Function works the same way as the command checksum but doesn't drop the
         leading @ symbols.
+
+            Parameters:
+                response (str): the reply message from the MFC
+            Returns:
+                a hex number in string form which represents the checksum value
         '''
         response,_ = response.split(';')
         response = response + ';'
@@ -197,6 +275,14 @@ class furnace:
             raise Warning('Unsuccessful communication with tube furnace.')
 
     def QueryTemp(self):
+        '''
+        Check the current temperature as reported by the furnace
+
+            Parameters:
+                None
+            Returns:
+                temperature (int): temperature reported by the furnace
+        '''
         function_code = '03'
         address = '0001'
         no_of_words = '0001'
