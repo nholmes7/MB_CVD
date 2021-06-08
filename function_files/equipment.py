@@ -46,6 +46,7 @@ class MFC:
         '''
         try:
             self.__SendCommand('SX!',set_point)
+            print('Flow set to ' + str(set_point) + ' sccm.')
         except Warning:
             print('Unsuccessful communication with MFC ' + str(self.address))
 
@@ -120,14 +121,14 @@ class MFC:
         comm_attempts = 0
         while not send_status:
             comm_attempts = comm_attempts + 1
-            print('Sending: ' + str(command))
+            # print('Sending: ' + str(command))
             MFC.ser.write(command)
             reply = MFC.ser.read_until(expected=bytes(';','ascii'))
             # reply = MFC.ser.read_until(terminator=bytes(';','ascii'))
             # append the checksum characters
             reply = reply + MFC.ser.read(size=2)
             reply = reply.decode('ascii',errors = 'ignore')
-            print('Received: ' + str(reply))
+            # print('Received: ' + str(reply))
             # Try except statement to deal with the frequent weirdness
             # at the start of the replies
             try:
@@ -135,7 +136,7 @@ class MFC:
                 reply = '@@' + reply[pos:]
             except ValueError:
                 pass
-            print('Interpreted as: ' + str(reply))
+            # print('Interpreted as: ' + str(reply))
             
             send_status = self.__ValidateResponse(reply)
             
@@ -260,7 +261,7 @@ class furnace:
         address = '0077'
         no_of_words = '0001'
         no_of_bytes = '02'
-        data = hex(setpoint)[2:]
+        data = hex(setpoint)[2:].upper()
         response_length = 8
         # Prepend leading zeros
         while len(data) < 4:
@@ -271,6 +272,7 @@ class furnace:
         command += CRC
         try:
             self.__SendCommand(command,response_length,function_code)
+            print('Temperature set to ' + str(setpoint) + ' C.')
         except Warning:
             raise Warning('Unsuccessful communication with tube furnace.')
 
@@ -292,10 +294,11 @@ class furnace:
         command += CRC
         try:
             response = self.__SendCommand(command,response_length,function_code)
+            temperature = int.from_bytes(response[3:-2],byteorder='big')
+            print('Temperature is ' + str(temperature) + ' C.')
         except Warning:
             raise Warning('Unsuccessful communication with tube furnace.')
-        temperature = int.from_bytes(response[3:-2],byteorder='big')
-        print('Temperature is: ' + str(temperature) + 'C.')
+
         return temperature
 
     def ChangeAddress(self,new_address):
@@ -325,20 +328,20 @@ class furnace:
 
         Returns the raw bytes received
         '''
-        print('Command before byte conversion: ' + command)
+        # print('Command before byte conversion: ' + command)
         command = bytes.fromhex(command)
         send_status = False
         max_iter = 5
         comm_attempts = 0
         while not send_status:
             comm_attempts = comm_attempts + 1
-            print('Sending: ' + str(command))
+            # print('Sending: ' + str(command))
             furnace.ser.write(command)
             valid,error_flag,response = self.__ReceiveResponse(response_length,function_code)
 
             if valid and not(error_flag):
                 send_status = True
-                print('Received: ' + str(response))
+                # print('Received: ' + str(response))
 
             if comm_attempts > max_iter:
                 raise Warning('Unsuccessful communication with tube furnace.')
@@ -357,7 +360,7 @@ class furnace:
         valid = False
         error_flag = False
         response = furnace.ser.read(size=2)
-        print(response)
+        # print(response)
         function_code = int.from_bytes(bytes.fromhex(function_code),byteorder='big')
         
         # Check the second byte to see if we have a legitimate response or an
@@ -389,15 +392,21 @@ class furnace:
                 CRC = CRC >> 1          # bit shift right
                 if flag:
                     CRC = CRC^0xA001
-        
+        error_check_code = hex(CRC)[2:]
+        # Prepend leading zeros
+        while len(error_check_code) < 4:
+            error_check_code = '0' + error_check_code
+
         # For some reason they flip the bit order...
         # error_check_code = hex(CRC)[2:]
-        error_check_code = hex(CRC)[4:] + hex(CRC)[2:4]
+        error_check_code = error_check_code[2:] + error_check_code[0:2]
         error_check_code = error_check_code.upper()
+        # print('CRC: ' + hex(CRC))
+        # print('CRC code: ' + error_check_code)
 
         return error_check_code
 
 if __name__ == '__main__':
     test_furnace = furnace(5)
     test_furnace.QueryTemp()
-    test_furnace.SetTemp(50)
+    test_furnace.SetTemp(55)
