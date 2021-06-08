@@ -181,10 +181,13 @@ class recipe():
             Returns:
                 None
         '''
+        log_start = time.time()
         delay = 1/freq
         # while True:
         for i in range(100):
             params = self.poll()
+            log_time = time.time()-log_start
+            params['Time'] = log_time
             self.__write_to_file(filename,params)
             time.sleep(delay)
 
@@ -209,7 +212,7 @@ class recipe():
             for gas in self.MFCs:
                 current_params[gas] = self.MFCs[gas].QueryFlow()
 
-        return self.current_params
+        return current_params
 
     #     task_1 = threading.Thread(target=self.furnace.QueryTemp)
     #     task_2 = threading.Thread(target=self.mfc_1.QueryFlow)
