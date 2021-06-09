@@ -22,7 +22,7 @@ class recipe():
     log_initialize: bool
         tracks whether the log file has been written to yet
     _lock: threading.Lock() object
-        used for threadin the logging and recipe execution
+        used for threading the logging and recipe execution
 
     Public Methods
     --------------

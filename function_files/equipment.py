@@ -20,6 +20,9 @@ class MFC:
     ----------
     address: int
         the address used for serial comms
+    ser: serial.Serial object
+        the serial object set up with the parameters for communication with the 
+        MFCs
 
     Public Methods
     --------------
@@ -29,11 +32,10 @@ class MFC:
     QueryOpMode()
     '''
 
-    import serial
-    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
-
     def __init__(self,address) -> None:
         self.address = address
+        import serial
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 
     def SetFlow(self,set_point):
         '''
@@ -122,11 +124,10 @@ class MFC:
         while not send_status:
             comm_attempts = comm_attempts + 1
             # print('Sending: ' + str(command))
-            MFC.ser.write(command)
-            reply = MFC.ser.read_until(expected=bytes(';','ascii'))
-            # reply = MFC.ser.read_until(terminator=bytes(';','ascii'))
+            self.ser.write(command)
+            reply = self.ser.read_until(expected=bytes(';','ascii'))
             # append the checksum characters
-            reply = reply + MFC.ser.read(size=2)
+            reply = reply + self.ser.read(size=2)
             reply = reply.decode('ascii',errors = 'ignore')
             # print('Received: ' + str(reply))
             # Try except statement to deal with the frequent weirdness
@@ -237,6 +238,9 @@ class furnace:
     ----------
     address: str
         the address used for serial comms over MODBUS as a two digit hex byte
+    ser: serial.Serial object
+        the serial object set up with the parameters for communication with the 
+        furnace
 
     Public Methods
     --------------
@@ -246,15 +250,14 @@ class furnace:
     ReportStatus()
     '''
 
-    import serial
-    ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
-
     def __init__(self,address) -> None:
         self.address = hex(address)[2:]
         # If the address is only one char, add a leading zero for compatibility
         # with methods
         if len(self.address) == 1:
             self.address = '0' + self.address
+        import serial
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 
     def SetTemp(self,setpoint):
         function_code = '10'
@@ -336,7 +339,7 @@ class furnace:
         while not send_status:
             comm_attempts = comm_attempts + 1
             # print('Sending: ' + str(command))
-            furnace.ser.write(command)
+            self.ser.write(command)
             valid,error_flag,response = self.__ReceiveResponse(response_length,function_code)
 
             if valid and not(error_flag):
@@ -359,7 +362,7 @@ class furnace:
         '''
         valid = False
         error_flag = False
-        response = furnace.ser.read(size=2)
+        response = self.ser.read(size=2)
         # print(response)
         function_code = int.from_bytes(bytes.fromhex(function_code),byteorder='big')
         
@@ -367,9 +370,9 @@ class furnace:
         # error message.  If we have an error message, the second byte will be
         # the function code plus 128.
         if response[1] == function_code:
-            response = response + furnace.ser.read(size=(response_length-2))
+            response = response + self.ser.read(size=(response_length-2))
         elif response[1] == function_code + 128:
-            response = response + furnace.ser.read(size=3)
+            response = response + self.ser.read(size=3)
             error_flag = True
 
         returned_CRC = response[-2:]
