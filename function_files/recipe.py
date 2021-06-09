@@ -23,6 +23,8 @@ class recipe():
         tracks whether the log file has been written to yet
     _lock: threading.Lock() object
         used for threading the logging and recipe execution
+    logging_state: bool
+        used to start and stop logging when a recipe is run
 
     Public Methods
     --------------
@@ -58,6 +60,7 @@ class recipe():
 
     def __init__(self,filename) -> None:
         self.log_initialize = False
+        self.logging_state = False
         self._lock = threading.Lock()
         self.steps = []
         with open(filename,'r') as file:
@@ -91,7 +94,16 @@ class recipe():
                 self.flow[column] = [j[i] for j in self.steps]
             i = i + 1
     
-    def run(self,log_freq=2):
+    def run(self):
+        '''
+        Runs the recipe from start to finish
+
+            Parameters:
+                None
+            Returns:
+                None
+        '''
+        self.logging_state = True
         start_time = time.time()
         i = 0
         for time_step in self.times:
@@ -128,6 +140,7 @@ class recipe():
 
             time.sleep(time_step)
             i = i + 1
+        self.logging_state = False
 
     def initialize(self):
         '''
@@ -170,8 +183,8 @@ class recipe():
         '''
         log_start = time.time()
         delay = 1/freq
-        # while True:
-        for i in range(50):
+        while self.logging_state:
+        # for i in range(50):
             with self._lock:
                 params = self.poll()
             log_time = time.time()-log_start

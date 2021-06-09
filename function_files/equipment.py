@@ -260,6 +260,14 @@ class furnace:
         self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 
     def SetTemp(self,setpoint):
+        '''
+        Set the temperature of the furnace.
+
+            Parameters:
+                setpoint (int)
+            Returns:
+                None
+        '''
         function_code = '10'
         address = '0077'
         no_of_words = '0001'
@@ -329,7 +337,12 @@ class furnace:
         Private method responsible for repeatedly sending the command until a
         response is received with correct CRC and no error message.
 
-        Returns the raw bytes received
+            Parameters:
+                command (str): the entire MODBUS command
+                response_length (int): expected response length
+                function_code (str): the two-byte MODBUS function code
+            Returns:
+                response (bytearray): raw bytes received including CRC
         '''
         # print('Command before byte conversion: ' + command)
         command = bytes.fromhex(command)
@@ -355,10 +368,13 @@ class furnace:
         Private method which listens for a MODBUS response.  Checks if the
         response is an error message and inspects the CRC value.
 
-        Returns:
-            - valid: whether the CRC checks out
-            - error_flag: whether the message is an error message
-            - response: raw bytes received
+            Parameters:
+                response_length (int): the anticipated length of the response in
+                    bytes
+            Returns:
+                valid (bool): whether the CRC checks out
+                error_flag (bool): whether the message is an error message
+                response (bytearray): raw bytes received including CRC
         '''
         valid = False
         error_flag = False
@@ -385,6 +401,17 @@ class furnace:
         return valid, error_flag, response
 
     def __CRC(self,msg):
+        '''
+        Performs a cyclinc redundancy check in the format specified by the
+        furnace documentation.
+
+            Parameters:
+                msg (str or bytearray): the MODBUS message without the 2 final
+                    CRC bytes
+            Returns:
+                error_check_code (str): the CRC result formatted as a four-
+                    character string representing 2 bytes in hexadecimal
+        '''
         if type(msg) is str:
             msg = bytearray.fromhex(msg)
         CRC = 0xFFFF
