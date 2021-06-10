@@ -68,4 +68,10 @@
 
 # print(serial.__version__)
 
-print('g.lk.awls dlk'.index(' '))
+# print('g.lk.awls dlk'.index(' '))
+
+import time, csv, threading
+
+# print(time.__version__)
+print(csv.__version__)
+# print(threading.__version__)
