@@ -473,6 +473,7 @@ class pressure_trans:
         command = '#' + self.address + 'P\r\n'
         try:
             reply = self.__SendCommand(command)
+            # print("LDNSLEWMNMDSMFVLSWED")
             pressure = self.__ParsePressure(reply)
             print('Reported pressure: ' + str(pressure) + ' torr.')
             return pressure
@@ -503,7 +504,7 @@ class pressure_trans:
             self.ser.write(command)
             reply = self.ser.read_until(expected=bytes('>','ascii'))
             reply = reply.decode('ascii',errors = 'ignore')
-            # print('Received: ' + str(reply))
+            # print('Received: ' + reply)
             send_status = self.__ValidateResponse(reply)
             if comm_attempts > max_iter:
                 raise Warning('Unsuccessful communication with pressure transducer ' + self.address)
@@ -518,11 +519,11 @@ class pressure_trans:
             Returns:
                 valid (bool)
         '''
-
+        valid = False
         try:
             response.index('.')
             response.index('\r')
-            if (response[0] == '@') and (response[1:4] == self.address):
+            if (response[2] == '@') and (response[3:6] == self.address):
                 valid = True
         except ValueError:
             pass
@@ -539,11 +540,15 @@ class pressure_trans:
                 pressure (float): the pressure value
         '''
         end_index = response.index(' ')
-        pressure = float(response[4:end_index])
+        pressure_string = response[7:end_index]
+        # print(pressure_string)
+        pressure = float(pressure_string)
         return pressure
         
 
 if __name__ == '__main__':
-    test_furnace = furnace(5)
-    test_furnace.QueryTemp()
-    test_furnace.SetTemp(55)
+    # test_furnace = furnace(5)
+    # test_furnace.QueryTemp()
+    # test_furnace.SetTemp(55)
+    test_press = pressure_trans(123)
+    test_press.QueryPressure()
