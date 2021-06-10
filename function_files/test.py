@@ -68,6 +68,4 @@
 
 # print(serial.__version__)
 
-with open('test_log','w') as file:
-    pass
-    # file.write('abc')
+print('g.lk.awls dlk'.index(' '))

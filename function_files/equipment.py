@@ -436,6 +436,113 @@ class furnace:
 
         return error_check_code
 
+class pressure_trans:
+    '''
+    A class for pressure transducers.
+
+    ...
+
+    Attributes
+    ----------
+    address: int
+        the address used for serial comms
+    ser: serial.Serial object
+        the serial object set up with the parameters for communication with the 
+        Omega PX409-485 pressure transducer
+
+    Public Methods
+    --------------
+    QueryPressure()
+    ReportStatus()
+    '''
+    def __init__(self,address) -> None:
+        import serial
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+        self.address = str(address)
+
+    def QueryPressure(self):
+        '''
+        Query the current pressure from the pressure transducer.
+
+            Parameters:
+                None
+            Returns:
+                pressure (float): the pressure value in whatever units the
+                    transducer is currently set to
+        '''
+        command = '#' + self.address + 'P\r\n'
+        try:
+            reply = self.__SendCommand(command)
+            pressure = self.__ParsePressure(reply)
+            print('Reported pressure: ' + str(pressure) + ' torr.')
+            return pressure
+        except Warning:
+            print('Unsuccessful communication with pressure transducer ' + self.address)
+
+    def ReportStatus(self):
+        pass
+
+    def __SendCommand(self,command):
+        '''
+        Send a command to a pressure transducer object over serial connection.
+
+            Parameters:
+                command (str): the complete command to send to the transducer
+
+            Returns:
+                returned_text (str): the portion of the returned serial message 
+                    between the address and the final carriage return
+        '''
+        command = bytes(command,'ascii')
+        send_status = False
+        max_iter = 5
+        comm_attempts = 0
+        while not send_status:
+            comm_attempts = comm_attempts + 1
+            # print('Sending: ' + str(command))
+            self.ser.write(command)
+            reply = self.ser.read_until(expected=bytes('>','ascii'))
+            reply = reply.decode('ascii',errors = 'ignore')
+            # print('Received: ' + str(reply))
+            send_status = self.__ValidateResponse(reply)
+            if comm_attempts > max_iter:
+                raise Warning('Unsuccessful communication with pressure transducer ' + self.address)
+        return reply
+
+    def __ValidateResponse(self,response):
+        '''
+        Checks as best we can that the reply message is valid.
+
+            Parameters:
+                response (str): complete reply
+            Returns:
+                valid (bool)
+        '''
+
+        try:
+            response.index('.')
+            response.index('\r')
+            if (response[0] == '@') and (response[1:4] == self.address):
+                valid = True
+        except ValueError:
+            pass
+
+        return valid
+
+    def __ParsePressure(self,response):
+        '''
+        Parses a pressure value from the transducer message.
+
+            Parameters:
+                response (str): the entire reply message from the tranducer
+            Returns:
+                pressure (float): the pressure value
+        '''
+        end_index = response.index(' ')
+        pressure = float(response[4:end_index])
+        return pressure
+        
+
 if __name__ == '__main__':
     test_furnace = furnace(5)
     test_furnace.QueryTemp()
