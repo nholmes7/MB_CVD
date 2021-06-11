@@ -1,3 +1,6 @@
+from function_files.equipment import pressure_trans
+
+
 class recipe():
     '''
     A class for the recipes that will be used for the tube furnace CVD system.
@@ -13,6 +16,8 @@ class recipe():
     MFCs: dict
         dictionary of the instances of the MFC class, done so that the MFCs may
         be dynamically created based on the recipe
+    press_trans: pressure transducer object
+        instance of the pressure_trans class
     times: list
         sequential list of recipe step times
     temps: list
@@ -75,6 +80,7 @@ class recipe():
         # Initialize the equipment objects
         self.furnace = None
         self.MFCs = {}
+        self.press_trans = pressure_trans(123)
         # Initialize the recipe sequence lists
         self.times = []
         self.temps = []
@@ -108,24 +114,10 @@ class recipe():
         i = 0
         for time_step in self.times:
             with self._lock:
-                # Some print statements for debugging.
                 print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
                 # Check to see if we have a furnace.
                 if self.furnace:
                     print('Setting temperature to ' + str(self.temps[i]))
-                # Check to see if we have MFCs.
-                if self.MFCs:
-                    for gas in self.flow:
-                        if i > 0:
-                            if self.flow[gas][i] == self.flow[gas][i-1]:
-                                pass
-                            else:
-                                print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
-                        else:
-                            print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
-            
-                # Check to see if we have a furnace.
-                if self.furnace:
                     self.furnace.SetTemp(self.temps[i])
                 # Check to see if we have MFCs.
                 if self.MFCs:
@@ -134,8 +126,10 @@ class recipe():
                             if self.flow[gas][i] == self.flow[gas][i-1]:
                                 pass
                             else:
+                                print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
                                 self.MFCs[gas].SetFlow(self.flow[gas][i])
                         else:
+                            print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
                             self.MFCs[gas].SetFlow(self.flow[gas][i])
 
             time.sleep(time_step)
@@ -161,6 +155,8 @@ class recipe():
             for gas in self.flow:
                 status = self.MFCs[gas].QueryOpMode()
                 success.append(status)
+        status = self.press_trans.ReportStatus()
+        success.append(status)
 
         success = all(success)
 
@@ -210,6 +206,7 @@ class recipe():
         if self.MFCs:
             for gas in self.MFCs:
                 current_params[gas] = self.MFCs[gas].QueryFlow()
+        current_params['Press'] = self.press_trans.QueryPressure()
 
         return current_params
 

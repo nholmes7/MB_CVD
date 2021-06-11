@@ -444,7 +444,7 @@ class pressure_trans:
 
     Attributes
     ----------
-    address: int
+    address: str
         the address used for serial comms
     ser: serial.Serial object
         the serial object set up with the parameters for communication with the 
@@ -473,7 +473,6 @@ class pressure_trans:
         command = '#' + self.address + 'P\r\n'
         try:
             reply = self.__SendCommand(command)
-            # print("LDNSLEWMNMDSMFVLSWED")
             pressure = self.__ParsePressure(reply)
             print('Reported pressure: ' + str(pressure) + ' torr.')
             return pressure
@@ -481,7 +480,21 @@ class pressure_trans:
             print('Unsuccessful communication with pressure transducer ' + self.address)
 
     def ReportStatus(self):
-        pass
+        '''
+        Check to see if the pressure transducer is online.
+
+            Parameters:
+                None
+            Returns:
+                status (bool)
+        '''
+        command = '#' + self.address + 'ENQ\r\n'
+        try:
+            self.__SendCommand(command)
+            status = True
+        except Warning:
+            status = False
+        return status
 
     def __SendCommand(self,command):
         '''
@@ -521,13 +534,11 @@ class pressure_trans:
         '''
         valid = False
         try:
-            response.index('.')
-            response.index('\r')
-            if (response[2] == '@') and (response[3:6] == self.address):
-                valid = True
+            response.index('@')
+            response.index(self.address)
+            valid = True
         except ValueError:
             pass
-
         return valid
 
     def __ParsePressure(self,response):
@@ -539,10 +550,24 @@ class pressure_trans:
             Returns:
                 pressure (float): the pressure value
         '''
-        end_index = response.index(' ')
-        pressure_string = response[7:end_index]
-        # print(pressure_string)
-        pressure = float(pressure_string)
+        addr_pos = response.index(self.address)
+        dec_pos = response.index('.')
+        # Find the integer digits first
+        i = 1
+        substring = response[dec_pos-i:dec_pos]
+        while substring.isnumeric() and (dec_pos-i > addr_pos+len(self.address)-1):
+            i = i + 1
+            substring = response[dec_pos-i:dec_pos]
+        i = i - 1
+        # Find the fractional digits next
+        j = 2
+        substring = response[dec_pos+1:dec_pos+j]
+        while substring.isnumeric():
+            j = j + 1
+            substring = response[dec_pos+1:dec_pos+j]
+        j = j - 1
+        pressure = float(response[dec_pos-i:dec_pos+j])
+
         return pressure
         
 
