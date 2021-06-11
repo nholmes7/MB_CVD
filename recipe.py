@@ -1,4 +1,4 @@
-from function_files.equipment import pressure_trans
+# from function_files.equipment import pressure_trans
 
 
 class recipe():
@@ -240,10 +240,8 @@ class recipe():
             log_writer.writerow(params)
     
 if __name__ == '__main__':
-    # import serial
-    # ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
     from equipment import *
-    import threading, time, csv
+    import threading, time, csv, serial
     test_recipe = recipe('example_recipe')
     # print(test_recipe.steps)
     # print(test_recipe.flow)
@@ -251,7 +249,13 @@ if __name__ == '__main__':
     # test_recipe.logging(2,'test_log')
     # test_recipe.initialize()
     # test_recipe.poll()
+
     run_task = threading.Thread(target=test_recipe.run)
-    log_task = threading.Thread(target=test_recipe.logging,args=(2,'test_log'))
+    log_task = threading.Thread(target=test_recipe.logging,args=(1,'test_log'))
     run_task.start()
     log_task.start()
+
+    # test_recipe.logging(2,'test_log')
+    # test_recipe.furnace.QueryTemp()
+    # print(test_recipe.press_trans.address)
+    # test_recipe.press_trans.QueryPressure()

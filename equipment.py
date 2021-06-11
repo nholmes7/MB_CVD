@@ -1,3 +1,4 @@
+import serial
 '''
 Python classes for the various devices connected to the RS-485 network for the
 tube furnace CVD system.
@@ -344,6 +345,7 @@ class furnace:
             Returns:
                 response (bytearray): raw bytes received including CRC
         '''
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
         # print('Command before byte conversion: ' + command)
         command = bytes.fromhex(command)
         send_status = False
@@ -507,6 +509,7 @@ class pressure_trans:
                 returned_text (str): the portion of the returned serial message 
                     between the address and the final carriage return
         '''
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
         command = bytes(command,'ascii')
         send_status = False
         max_iter = 5
@@ -572,8 +575,10 @@ class pressure_trans:
         
 
 if __name__ == '__main__':
-    # test_furnace = furnace(5)
-    # test_furnace.QueryTemp()
+    import serial
+    test_furnace = furnace(5)
+    
     # test_furnace.SetTemp(55)
     test_press = pressure_trans(123)
+    test_furnace.QueryTemp()
     test_press.QueryPressure()
