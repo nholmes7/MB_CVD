@@ -113,6 +113,7 @@ class recipe():
         start_time = time.time()
         i = 0
         for time_step in self.times:
+            # Set the temperature and flow rates.
             with self._lock:
                 print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
                 # Check to see if we have a furnace.
@@ -131,7 +132,17 @@ class recipe():
                         else:
                             print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
                             self.MFCs[gas].SetFlow(self.flow[gas][i])
+            
+            # Wait for the temperature to rise/fall to a value
+            # close to the setpoint.
+            temp_diff = 100
+            while temp_diff > 3:
+                with self.lock:
+                    curr_temp = self.furnace.QueryTemp()
+                temp_diff = abs(curr_temp-self.temps[i])
+                time.sleep(3)
 
+            # Wait the recipe step time.
             time.sleep(time_step)
             i = i + 1
         self.logging_state = False
