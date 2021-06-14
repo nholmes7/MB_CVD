@@ -1,7 +1,0 @@
-#Author: Nathaniel Holmes
-#Creation Date: 2020-12-14
-#Last Modified: 2020-12-15
-#Columns: Time,Temp,Helium
-60,25,50,1000
-60,25,50,100
-800,25,50,50
