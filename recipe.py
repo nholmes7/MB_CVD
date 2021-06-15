@@ -136,10 +136,11 @@ class recipe():
             # Wait for the temperature to rise/fall to a value
             # close to the setpoint.
             temp_diff = 100
-            while temp_diff > 3:
-                with self.lock:
+            while temp_diff > 2:
+                with self._lock:
                     curr_temp = self.furnace.QueryTemp()
                 temp_diff = abs(curr_temp-self.temps[i])
+                # print('Temperature difference: ' + str(temp_diff))
                 time.sleep(3)
 
             # Wait the recipe step time.
@@ -266,7 +267,8 @@ if __name__ == '__main__':
     run_task.start()
     log_task.start()
 
-    # test_recipe.logging(2,'test_log')
     # test_recipe.furnace.QueryTemp()
-    # print(test_recipe.press_trans.address)
+    # test_recipe.MFCs['Helium'].QueryFlow()
+    # test_recipe.MFCs['Hydrogen'].QueryFlow()
+    # test_recipe.MFCs['Ethylene'].QueryFlow()
     # test_recipe.press_trans.QueryPressure()
