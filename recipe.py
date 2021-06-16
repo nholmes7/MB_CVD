@@ -254,7 +254,7 @@ class recipe():
 if __name__ == '__main__':
     from equipment import *
     import threading, time, csv, serial
-    test_recipe = recipe('example_recipe')
+    test_recipe = recipe('recipe_1')
     # print(test_recipe.steps)
     # print(test_recipe.flow)
     # test_recipe.run()
@@ -263,12 +263,12 @@ if __name__ == '__main__':
     # test_recipe.poll()
 
     run_task = threading.Thread(target=test_recipe.run)
-    log_task = threading.Thread(target=test_recipe.logging,args=(1,'test_log'))
+    log_task = threading.Thread(target=test_recipe.logging,args=(1,'log_1'))
     run_task.start()
     log_task.start()
 
     # test_recipe.furnace.QueryTemp()
     # test_recipe.MFCs['Helium'].QueryFlow()
-    # test_recipe.MFCs['Hydrogen'].QueryFlow()
-    # test_recipe.MFCs['Ethylene'].QueryFlow()
+    # test_recipe.MFCs['Hydrogen'].SetFlow(500)
+    # test_recipe.MFCs['Ethylene'].SetFlow(500)
     # test_recipe.press_trans.QueryPressure()
