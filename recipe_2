@@ -1,0 +1,10 @@
+#Author: Nathaniel Holmes
+#Creation Date: 2020-06-14
+#Last Modified: 2020-06-14
+#Columns: Time,Temp,Helium,Hydrogen,Ethylene
+300,25,400,100,100
+300,25,1000,0,0
+300,25,400,100,0
+600,775,400,100,0
+600,775,400,100,100
+300,300,1000,0,0
