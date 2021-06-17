@@ -284,7 +284,7 @@ if __name__ == '__main__':
     log_task.start()
 
     # test_recipe.furnace.QueryTemp()
-    # test_recipe.MFCs['Helium'].QueryFlow()
+    # test_recipe.MFCs['Helium'].SetFlow(1000)
     # test_recipe.MFCs['Hydrogen'].SetFlow(500)
     # test_recipe.MFCs['Ethylene'].SetFlow(500)
     # test_recipe.press_trans.QueryPressure()
