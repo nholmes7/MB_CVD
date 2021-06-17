@@ -193,11 +193,14 @@ class recipe():
         delay = 1/freq
         while self.logging_state:
         # for i in range(50):
-            with self._lock:
-                params = self.poll()
-            log_time = time.time()-log_start
-            params['Time'] = log_time
-            self.__write_to_file(filename,params)
+            try:
+                with self._lock:
+                    params = self.poll()
+                log_time = time.time()-log_start
+                params['Time'] = log_time
+                self.__write_to_file(filename,params)
+            except Warning:
+                pass
             time.sleep(delay)
 
     def poll(self):
@@ -213,12 +216,22 @@ class recipe():
         current_params = {}
         # Check to see if we have a furnace.
         if self.furnace:
-            current_params['Temp'] = self.furnace.QueryTemp()
+            try:
+                current_params['Temp'] = self.furnace.QueryTemp()
+            except Warning:
+                raise Warning('Unsuccessful communication with tube furnace.')
         # Check to see if we have MFCs.
         if self.MFCs:
             for gas in self.MFCs:
-                current_params[gas] = self.MFCs[gas].QueryFlow()
-        current_params['Press'] = self.press_trans.QueryPressure()
+                try:
+                    current_params[gas] = self.MFCs[gas].QueryFlow()
+                except Warning:
+                    raise Warning('Unsuccessful communication with MFC.')
+        # Assume we always have the pressure transducer.
+        try:
+            current_params['Press'] = self.press_trans.QueryPressure()
+        except Warning:
+            raise Warning('Unsuccessful communication with pressure transducer.')
 
         return current_params
 
