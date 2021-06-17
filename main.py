@@ -6,9 +6,8 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import pyqtgraph
 import threading, time, serial, math
-from run_recipe import run_recipe
 
-ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+# ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
 
 # define a new class which inherits from the QMainWindow object - not a default python object like our Ui_MainWindow class
 class cvd_control(QtWidgets.QMainWindow): 
@@ -35,10 +34,10 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.temp_graph.setBackground(background_colour)
         self.ui.temp_graph.setTitle('Temperature',color='k',size = '16pt')
         self.ui.temp_graph.setLabel("bottom", "Time (s)", **styles)
-        # self.ui.gas_graph.setBackground(background_colour)
-        # self.ui.gas_graph.setTitle('Flow Rates',color='k',size = '16pt')
+        self.ui.gas_graph.setBackground(background_colour)
+        self.ui.gas_graph.setTitle('Flow Rates',color='k',size = '16pt')
         # self.ui.gas_graph.addLegend(offset = (1,-150))
-        # self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
+        self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
 
         # define variables for dynamic data
         # self.time = list(range(100))
@@ -63,7 +62,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(250)
         self.timer.timeout.connect(self.update_plot)
-        self.timer.start()
+        # self.timer.start()
 
 
     def return_ui_fields(self):
@@ -221,9 +220,10 @@ class cvd_control(QtWidgets.QMainWindow):
         # self.gas_3_line.setData(self.time,self.gas_3_flow)
 
     def start_recipe(self):
-        self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">RUNNING</span></p></body></html>")
-        run_task = threading.Thread(target=run_recipe)
-        run_task.start()
+        # self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">RUNNING</span></p></body></html>")
+        # run_task = threading.Thread(target=run_recipe)
+        # run_task.start()
+        pass
 
     def stop_recipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">STOPPED</span></p></body></html>")
