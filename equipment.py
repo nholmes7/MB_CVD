@@ -355,7 +355,10 @@ class furnace:
             comm_attempts = comm_attempts + 1
             # print('Sending: ' + str(command))
             self.ser.write(command)
-            valid,error_flag,response = self.__ReceiveResponse(response_length,function_code)
+            try:
+                valid,error_flag,response = self.__ReceiveResponse(response_length,function_code)
+            except Warning:
+                raise Warning('Unsuccessful communication with tube furnace.')
 
             if valid and not(error_flag):
                 send_status = True
@@ -373,6 +376,7 @@ class furnace:
             Parameters:
                 response_length (int): the anticipated length of the response in
                     bytes
+                function_code (str): the two-byte MODBUS function code
             Returns:
                 valid (bool): whether the CRC checks out
                 error_flag (bool): whether the message is an error message
@@ -380,10 +384,16 @@ class furnace:
         '''
         valid = False
         error_flag = False
+        function_code = int.from_bytes(bytes.fromhex(function_code),byteorder='big')
         response = self.ser.read(size=2)
         # print(response)
-        function_code = int.from_bytes(bytes.fromhex(function_code),byteorder='big')
         
+        # First, check to make sure we got a message back.
+        try:
+            response[1]
+        except IndexError:
+            raise Warning('Unsuccessful communication with tube furnace.')
+
         # Check the second byte to see if we have a legitimate response or an
         # error message.  If we have an error message, the second byte will be
         # the function code plus 128.
