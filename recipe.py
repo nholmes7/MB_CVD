@@ -138,7 +138,10 @@ class recipe():
             temp_diff = 100
             while temp_diff > 2:
                 with self._lock:
-                    curr_temp = self.furnace.QueryTemp()
+                    try:
+                        curr_temp = self.furnace.QueryTemp()
+                    except Warning:
+                        pass
                 temp_diff = abs(curr_temp-self.temps[i])
                 # print('Temperature difference: ' + str(temp_diff))
                 time.sleep(3)
