@@ -1,7 +1,7 @@
 # from function_files.equipment import pressure_trans
 
 
-class recipe():
+class Recipe():
     '''
     A class for the recipes that will be used for the tube furnace CVD system.
 
@@ -85,6 +85,8 @@ class recipe():
         self.times = []
         self.temps = []
         self.flow = {}
+        self.log_freq = 1
+        self.log_period = 1/self.log_freq
 
         # Define the equipment based on the column labels and define the recipe
         # sequence lists
@@ -96,7 +98,7 @@ class recipe():
                 self.furnace = furnace(5)
                 self.temps = [int(j[i]) for j in self.steps]
             else:
-                self.MFCs[column] = MFC(recipe.MFC_address_lookup[column])
+                self.MFCs[column] = MFC(Recipe.MFC_address_lookup[column])
                 self.flow[column] = [j[i] for j in self.steps]
             i = i + 1
     
@@ -267,7 +269,7 @@ class recipe():
 if __name__ == '__main__':
     from equipment import *
     import threading, time, csv, serial
-    test_recipe = recipe('recipe_1')
+    test_recipe = Recipe('recipe_1')
     # print(test_recipe.steps)
     # print(test_recipe.flow)
     # test_recipe.run()

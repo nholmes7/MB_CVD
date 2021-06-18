@@ -6,6 +6,8 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import pyqtgraph
 import threading, time, serial, math
+from equipment import *
+from recipe import Recipe
 
 # ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
 
@@ -64,7 +66,90 @@ class cvd_control(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_plot)
         # self.timer.start()
 
+        self.loop_timer = QtCore.QTimer()
+        self.loop_timer.setInterval(250)
+        self.loop_timer.timeout.connect(self.ExecuteQueue)
+        self.loop_timer.start()
 
+        self.queue = []
+        self.ramping = False
+        self.temp_reached = False
+        self.curr_temp = 25
+        self.temp_setpoint = 0
+        self.step = []
+        self.step_duration = 0
+
+        self.curr_recipe = None
+        self.running = False
+
+    def ExecuteQueue(self):
+        '''
+        Contains the logic for how the queue should be handled and executed.
+        '''
+        if self.running:
+            empty = len(self.queue) == 0
+            if empty:
+                if self.ramping:
+                    self.temp_reached = self.CheckTemp()
+                    if self.temp_reached:
+                        # We have reached temperature, append all the log points
+                        # for the duration of the recipe step to the queue.
+                        self.AppendStepLogpoints()
+                        self.ramping = False
+                    else:
+                        # We have not reached the step temperature and are still
+                        # ramping.  Append a single temp query to the queue.
+                        self.queue.append([self.curr_recipe.furnace.QueryTemp,time.time()+self.curr_recipe.log_period])
+                else:
+                    # We are finished with a step and need to begin a new one.
+                    # Append the setpoints for the next step to the queue.
+                    self.AppendSetpoints()
+                    self.ramping = True
+                    
+            else:
+                # There are tasks in the queue - we use a loop in case there are
+                # multiple tasks ready for execution.
+                while not empty:
+                    task_ready = self.queue[0][-1] < time.time()
+                    if task_ready:
+                        task = self.queue.pop(0)
+
+                        # Tasks like querying only have a function and a
+                        # timestamp
+                        if len(task) == 2:
+                            task[0]()
+
+                        # Tasks like setting a setpoint have a function, a
+                        # setpoint value, and a timestamp
+                        elif len(task) == 3:
+                            task[0](task[1])
+
+                        # Make sure the queue isn't empty to avoid an IndexError
+                        empty = len(self.queue) == 0
+                    else:
+                        # If no task is ready, break out of the loop.
+                        break
+    
+    def CheckTemp(self):
+        self.curr_temp = self.curr_recipe.furnace.QueryTemp()
+        if abs(self.curr_temp-self.temp_setpoint) < 2:
+            return True
+        return False
+
+    def AppendSetpoints(self):
+        try:
+            self.step = self.curr_recipe.steps.pop(0)
+            self.step_duration = self.step[0]
+            self.temp_setpoint = self.step[1]
+            self.queue.append([self.curr_recipe.furnace.SetTemp,self.temp_setpoint,time.time()])
+        except IndexError:
+            self.running = False
+
+    def AppendStepLogpoints(self):
+        timestamps = [i*self.curr_recipe.log_period + time.time() for i in range(int(self.step_duration/self.curr_recipe.log_period))]
+        for timestamp in timestamps:
+            self.queue.append([self.curr_recipe.furnace.QueryTemp,timestamp])
+    
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
                      [self.ui.lineEdit_time_2,self.ui.lineEdit_temp_2,self.ui.lineEdit_heFlow_2,self.ui.lineEdit_h2Flow_2,self.ui.lineEdit_c2h4Flow_2],
@@ -144,6 +229,8 @@ class cvd_control(QtWidgets.QMainWindow):
             recipe.writelines(text_to_save)
 
     def open_recipe(self):
+
+        self.curr_recipe = Recipe('example_recipe')
         
         # show open file dialogue and write selected file path to fileName variable
         options = QtWidgets.QFileDialog.Options()
@@ -201,8 +288,8 @@ class cvd_control(QtWidgets.QMainWindow):
             self.time.append(1)
         self.time = self.time[-10:]
 
-        self.temp.append(poll_pressure())
-        self.temp = self.temp[-10:]
+        # self.temp.append(poll_pressure())
+        # self.temp = self.temp[-10:]
 
         # self.gas_1_flow = self.gas_1_flow[1:]
         # self.gas_1_flow += [math.sin(self.time[-1]/24)]
@@ -220,13 +307,16 @@ class cvd_control(QtWidgets.QMainWindow):
         # self.gas_3_line.setData(self.time,self.gas_3_flow)
 
     def start_recipe(self):
-        # self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">RUNNING</span></p></body></html>")
-        # run_task = threading.Thread(target=run_recipe)
-        # run_task.start()
-        pass
+        self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe \
+            Status: <span style=\" font-weight:600;\">RUNNING</span></p></body>\
+            </html>")
+        self.running = True
 
     def stop_recipe(self):
-        self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">STOPPED</span></p></body></html>")
+        self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe \
+            Status: <span style=\" font-weight:600;\">STOPPED</span></p></body>\
+            </html>")
+        self.running = False
 
     def apply_setpoints(self):
         # self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + self.ui.lineEdit_2.text() + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
