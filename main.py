@@ -74,7 +74,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.loop_timer.start()
 
         self.queue = []
-        self.log_data = {}
+        self.log_data = {'Time':0}
         self.ramping = False
         self.temp_reached = False
         self.curr_temp = 25
@@ -102,8 +102,11 @@ class cvd_control(QtWidgets.QMainWindow):
                         self.ramping = False
                     else:
                         # We have not reached the step temperature and are still
-                        # ramping.  Append a single temp query to the queue.
+                        # ramping.  Append a single query of all parameters to 
+                        # the queue.
                         self.queue.append([self.curr_recipe.furnace.QueryTemp,'Temp',time.time()+self.curr_recipe.log_period])
+                        for gas in self.curr_recipe.MFCs:
+                            self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,gas,time.time()+self.curr_recipe.log_period])
                 else:
                     # We are finished with a step and need to begin a new one.
                     # Append the setpoints for the next step to the queue.
@@ -122,7 +125,7 @@ class cvd_control(QtWidgets.QMainWindow):
                         # timestamp
                         if len(task) == 3:
                             reply = task[0]()
-                            self.log_data.update({task[2]:reply})
+                            self.log_data.update({task[1]:reply})
 
                             # If we have a complete set of log points to save to a
                             # file, we do so here.
@@ -153,8 +156,9 @@ class cvd_control(QtWidgets.QMainWindow):
             self.step_duration = self.step[0]
             self.temp_setpoint = self.step[1]
             i = 0
+            self.gas_setpoints = []
             for gas in self.curr_recipe.MFCs:
-                self.gas_setpoints[i] = self.step[i+2]
+                self.gas_setpoints.append(self.step[i+2])
                 self.queue.append([self.curr_recipe.MFCs[gas].SetFlow,self.gas_setpoints[i],gas,time.time()])
                 i = i + 1
             self.queue.append([self.curr_recipe.furnace.SetTemp,self.temp_setpoint,'Temp',time.time()])
@@ -169,14 +173,16 @@ class cvd_control(QtWidgets.QMainWindow):
                 self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,gas,timestamp])
 
     def AppendToLog(self):
+        print(self.log_data)
+        print(self.curr_recipe.params)
         with open('test_log','a') as file:
-            log_writer = csv.DictWriter(file, fieldnames=self.curr_recipe.params.append('Time'))
+            log_writer = csv.DictWriter(file, fieldnames=self.curr_recipe.params)
             # if self.log_initialize == False:
             #     # Add code to write the date and time here
             #     log_writer.writeheader()
             #     self.log_initialize = True
             log_writer.writerow(self.log_data)
-        self.log_data = {}
+        self.log_data = {'Time':0}
     
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],

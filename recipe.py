@@ -64,9 +64,11 @@ class Recipe():
     }
 
     def __init__(self,filename) -> None:
+        from equipment import pressure_trans
+        from equipment import furnace
+        from equipment import MFC
         self.log_initialize = False
         self.logging_state = False
-        self._lock = threading.Lock()
         self.steps = []
         with open(filename,'r') as file:
             for line in file:
@@ -104,6 +106,7 @@ class Recipe():
                 self.flow[column] = [j[i] for j in self.steps]
                 self.params.append(column)
             i = i + 1
+        self.params.append('Time')
     
     def run(self):
         '''
@@ -119,24 +122,23 @@ class Recipe():
         i = 0
         for time_step in self.times:
             # Set the temperature and flow rates.
-            with self._lock:
-                print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
-                # Check to see if we have a furnace.
-                if self.furnace:
-                    print('Setting temperature to ' + str(self.temps[i]))
-                    self.furnace.SetTemp(self.temps[i])
-                # Check to see if we have MFCs.
-                if self.MFCs:
-                    for gas in self.MFCs:
-                        if i > 0:
-                            if self.flow[gas][i] == self.flow[gas][i-1]:
-                                pass
-                            else:
-                                print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
-                                self.MFCs[gas].SetFlow(self.flow[gas][i])
+            print('Time: ' + str(round(time.time()-start_time,3)) + ' s.')
+            # Check to see if we have a furnace.
+            if self.furnace:
+                print('Setting temperature to ' + str(self.temps[i]))
+                self.furnace.SetTemp(self.temps[i])
+            # Check to see if we have MFCs.
+            if self.MFCs:
+                for gas in self.MFCs:
+                    if i > 0:
+                        if self.flow[gas][i] == self.flow[gas][i-1]:
+                            pass
                         else:
                             print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
                             self.MFCs[gas].SetFlow(self.flow[gas][i])
+                    else:
+                        print('Setting ' + gas + ' to ' + str(self.flow[gas][i]))
+                        self.MFCs[gas].SetFlow(self.flow[gas][i])
             
             # Wait for the temperature to rise/fall to a value
             # close to the setpoint.

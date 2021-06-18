@@ -269,6 +269,7 @@ class furnace:
             Returns:
                 None
         '''
+        setpoint = int(setpoint)
         function_code = '10'
         address = '0077'
         no_of_words = '0001'

@@ -2,6 +2,6 @@
 #Creation Date: 2020-06-14
 #Last Modified: 2020-06-14
 #Columns: Time,Temp,Helium,Hydrogen,Ethylene
-180,75,100,50,0
+180,150,1000,505,500
 150,125,400,100,25
-120,115,1000,0,0
+120,150,1000,0,0
