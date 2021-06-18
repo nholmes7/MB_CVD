@@ -87,6 +87,7 @@ class Recipe():
         self.flow = {}
         self.log_freq = 1
         self.log_period = 1/self.log_freq
+        self.params = []
 
         # Define the equipment based on the column labels and define the recipe
         # sequence lists
@@ -97,9 +98,11 @@ class Recipe():
             elif column == 'Temp':
                 self.furnace = furnace(5)
                 self.temps = [int(j[i]) for j in self.steps]
+                self.params.append(column)
             else:
                 self.MFCs[column] = MFC(Recipe.MFC_address_lookup[column])
                 self.flow[column] = [j[i] for j in self.steps]
+                self.params.append(column)
             i = i + 1
     
     def run(self):

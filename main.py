@@ -4,19 +4,21 @@ from datetime import date
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-import pyqtgraph
-import threading, time, serial, math
+import threading, time, serial, math, csv, pyqtgraph
 from equipment import *
 from recipe import Recipe
 
 # ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
 
-# define a new class which inherits from the QMainWindow object - not a default python object like our Ui_MainWindow class
+# Define a new class which inherits from the QMainWindow object - not a default 
+# python object like our Ui_MainWindow class
 class cvd_control(QtWidgets.QMainWindow): 
     
     # override the init method
     def __init__(self, *args, **kwargs):
-        # whenever you override the init method in a Qt object you need to run super().__init__ and pass in any arguments that were passed in so it still behaves like a Qt widget
+        # whenever you override the init method in a Qt object you need to run 
+        # super().__init__ and pass in any arguments that were passed in so it 
+        # still behaves like a Qt widget
         super().__init__(*args, **kwargs)
         
         # setupUi builds the GUI onto the cvd_control QMainWindow object
@@ -72,10 +74,12 @@ class cvd_control(QtWidgets.QMainWindow):
         self.loop_timer.start()
 
         self.queue = []
+        self.log_data = {}
         self.ramping = False
         self.temp_reached = False
         self.curr_temp = 25
         self.temp_setpoint = 0
+        self.gas_setpoints = []
         self.step = []
         self.step_duration = 0
 
@@ -124,6 +128,12 @@ class cvd_control(QtWidgets.QMainWindow):
                         elif len(task) == 3:
                             task[0](task[1])
 
+                        # If we have a complete set of log points to save to a
+                        # file, we do so here.
+
+                        if all(field in self.log_data for field in self.curr_recipe.params):
+                            self.AppendToLog()
+
                         # Make sure the queue isn't empty to avoid an IndexError
                         empty = len(self.queue) == 0
                     else:
@@ -141,6 +151,11 @@ class cvd_control(QtWidgets.QMainWindow):
             self.step = self.curr_recipe.steps.pop(0)
             self.step_duration = self.step[0]
             self.temp_setpoint = self.step[1]
+            i = 0
+            for gas in self.curr_recipe.MFCs:
+                self.gas_setpoints[i] = self.step[i+2]
+                self.queue.append([self.curr_recipe.MFCs[gas].SetFlow,self.gas_setpoints[i],time.time()])
+                i = i + 1
             self.queue.append([self.curr_recipe.furnace.SetTemp,self.temp_setpoint,time.time()])
         except IndexError:
             self.running = False
@@ -149,6 +164,17 @@ class cvd_control(QtWidgets.QMainWindow):
         timestamps = [i*self.curr_recipe.log_period + time.time() for i in range(int(self.step_duration/self.curr_recipe.log_period))]
         for timestamp in timestamps:
             self.queue.append([self.curr_recipe.furnace.QueryTemp,timestamp])
+            for gas in self.curr_recipe.MFCs:
+                self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,timestamp])
+
+    def AppendToLog(self):
+        with open('test_log','a') as file:
+            log_writer = csv.DictWriter(file, fieldnames=fieldnames)
+            if self.log_initialize == False:
+                # Add code to write the date and time here
+                log_writer.writeheader()
+                self.log_initialize = True
+            log_writer.writerow(params)
     
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],

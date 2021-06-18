@@ -1,10 +1,8 @@
-def AddFive(num):
-    return num + 5
+test_dict = {'cat':27,'dog':32}
 
-def AddTen(num):
-    return num + 10
+test_dict2 = {'monkey':4}
 
-def Execute(func,num):
-    return func(num)
+test_dict.update(test_dict2)
 
-print(Execute(AddTen,4))
+for animal in test_dict:
+    print(animal)
