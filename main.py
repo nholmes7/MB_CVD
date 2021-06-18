@@ -103,7 +103,7 @@ class cvd_control(QtWidgets.QMainWindow):
                     else:
                         # We have not reached the step temperature and are still
                         # ramping.  Append a single temp query to the queue.
-                        self.queue.append([self.curr_recipe.furnace.QueryTemp,time.time()+self.curr_recipe.log_period])
+                        self.queue.append([self.curr_recipe.furnace.QueryTemp,'Temp',time.time()+self.curr_recipe.log_period])
                 else:
                     # We are finished with a step and need to begin a new one.
                     # Append the setpoints for the next step to the queue.
@@ -120,19 +120,20 @@ class cvd_control(QtWidgets.QMainWindow):
 
                         # Tasks like querying only have a function and a
                         # timestamp
-                        if len(task) == 2:
-                            task[0]()
+                        if len(task) == 3:
+                            reply = task[0]()
+                            self.log_data.update({task[2]:reply})
+
+                            # If we have a complete set of log points to save to a
+                            # file, we do so here.
+                            if all(field in self.log_data for field in self.curr_recipe.params):
+                                self.log_data.update({'Time':time.time()})
+                                self.AppendToLog()
 
                         # Tasks like setting a setpoint have a function, a
                         # setpoint value, and a timestamp
-                        elif len(task) == 3:
+                        elif len(task) == 4:
                             task[0](task[1])
-
-                        # If we have a complete set of log points to save to a
-                        # file, we do so here.
-
-                        if all(field in self.log_data for field in self.curr_recipe.params):
-                            self.AppendToLog()
 
                         # Make sure the queue isn't empty to avoid an IndexError
                         empty = len(self.queue) == 0
@@ -154,27 +155,28 @@ class cvd_control(QtWidgets.QMainWindow):
             i = 0
             for gas in self.curr_recipe.MFCs:
                 self.gas_setpoints[i] = self.step[i+2]
-                self.queue.append([self.curr_recipe.MFCs[gas].SetFlow,self.gas_setpoints[i],time.time()])
+                self.queue.append([self.curr_recipe.MFCs[gas].SetFlow,self.gas_setpoints[i],gas,time.time()])
                 i = i + 1
-            self.queue.append([self.curr_recipe.furnace.SetTemp,self.temp_setpoint,time.time()])
+            self.queue.append([self.curr_recipe.furnace.SetTemp,self.temp_setpoint,'Temp',time.time()])
         except IndexError:
             self.running = False
 
     def AppendStepLogpoints(self):
         timestamps = [i*self.curr_recipe.log_period + time.time() for i in range(int(self.step_duration/self.curr_recipe.log_period))]
         for timestamp in timestamps:
-            self.queue.append([self.curr_recipe.furnace.QueryTemp,timestamp])
+            self.queue.append([self.curr_recipe.furnace.QueryTemp,'Temp',timestamp])
             for gas in self.curr_recipe.MFCs:
-                self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,timestamp])
+                self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,gas,timestamp])
 
     def AppendToLog(self):
         with open('test_log','a') as file:
-            log_writer = csv.DictWriter(file, fieldnames=fieldnames)
-            if self.log_initialize == False:
-                # Add code to write the date and time here
-                log_writer.writeheader()
-                self.log_initialize = True
-            log_writer.writerow(params)
+            log_writer = csv.DictWriter(file, fieldnames=self.curr_recipe.params.append('Time'))
+            # if self.log_initialize == False:
+            #     # Add code to write the date and time here
+            #     log_writer.writeheader()
+            #     self.log_initialize = True
+            log_writer.writerow(self.log_data)
+        self.log_data = {}
     
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
