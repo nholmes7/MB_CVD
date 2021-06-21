@@ -1,8 +1,16 @@
-test_dict = {'cat':27,'dog':32}
+def returnSomething():
+    print('This function returns something.')
+    return 10
 
-test_dict2 = {'monkey':4}
+def dontReturn():
+    print('This function returns nothing.')
 
-test_dict.update(test_dict2)
+def execute(func):
+    reply = func()
+    if reply:
+        print('There was a reply')
+        return
+    print('Does this print?')
 
-for animal in test_dict:
-    print(animal)
+
+execute(dontReturn)

@@ -271,6 +271,36 @@ class Recipe():
                 self.log_initialize = True
             log_writer.writerow(params)
     
+class QueueItem():
+    '''
+    A class for queue items.
+
+    ...
+
+    Attributes
+    ----------
+    func: function object
+        The function relevant to the queue item
+    timestamp: float
+        The time before which the queue item is not to be executed
+    params:
+        Any parameters func may require
+
+    Public Methods
+    --------------
+    Execute()
+    '''
+
+    def __init__(self,func,timestamp,params = None,fieldname = None) -> None:
+        self.func = func
+        self.timestamp = timestamp
+        self.params = params
+        self.fieldname = fieldname
+
+    def Execute(self):
+        reply = self.func(self.params)
+        return reply
+
 if __name__ == '__main__':
     from equipment import *
     import threading, time, csv, serial

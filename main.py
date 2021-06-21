@@ -6,13 +6,11 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import threading, time, serial, math, csv, pyqtgraph
 from equipment import *
-from recipe import Recipe
-
-# ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+from recipe import Recipe,QueueItem
 
 # Define a new class which inherits from the QMainWindow object - not a default 
 # python object like our Ui_MainWindow class
-class cvd_control(QtWidgets.QMainWindow): 
+class cvd_control(QtWidgets.QMainWindow):
     
     # override the init method
     def __init__(self, *args, **kwargs):
@@ -76,111 +74,108 @@ class cvd_control(QtWidgets.QMainWindow):
         self.queue = []
         self.log_data = {'Time':0}
         self.ramping = False
-        self.temp_reached = False
-        self.curr_temp = 25
+        self.curr_temp = 0
         self.temp_setpoint = 0
         self.gas_setpoints = []
         self.step = []
         self.step_duration = 0
+        self.recipe_start_time = 0
 
         self.curr_recipe = None
         self.running = False
+        self.log_initialize = False
 
     def ExecuteQueue(self):
         '''
         Contains the logic for how the queue should be handled and executed.
         '''
-        if self.running:
-            empty = len(self.queue) == 0
-            if empty:
-                if self.ramping:
-                    self.temp_reached = self.CheckTemp()
-                    if self.temp_reached:
-                        # We have reached temperature, append all the log points
-                        # for the duration of the recipe step to the queue.
-                        self.AppendStepLogpoints()
-                        self.ramping = False
-                    else:
-                        # We have not reached the step temperature and are still
-                        # ramping.  Append a single query of all parameters to 
-                        # the queue.
-                        self.queue.append([self.curr_recipe.furnace.QueryTemp,'Temp',time.time()+self.curr_recipe.log_period])
-                        for gas in self.curr_recipe.MFCs:
-                            self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,gas,time.time()+self.curr_recipe.log_period])
+        empty = len(self.queue) == 0
+        if empty:
+            if self.ramping:
+                temp_reached = abs(self.curr_temp-self.temp_setpoint) < 2
+                if temp_reached:
+                    # We have reached temperature, append all the log points
+                    # for the duration of the recipe step to the queue.
+                    self.AppendStepLogpoints()
+                    self.ramping = False
                 else:
-                    # We are finished with a step and need to begin a new one.
-                    # Append the setpoints for the next step to the queue.
-                    self.AppendSetpoints()
-                    self.ramping = True
-                    
+                    # We have not reached the step temperature and are still
+                    # ramping.  Append a single query of all parameters to 
+                    # the queue.
+                    self.RampPoll() 
             else:
-                # There are tasks in the queue - we use a loop in case there are
-                # multiple tasks ready for execution.
-                while not empty:
-                    task_ready = self.queue[0][-1] < time.time()
-                    if task_ready:
-                        task = self.queue.pop(0)
-
-                        # Tasks like querying only have a function and a
-                        # timestamp
-                        if len(task) == 3:
-                            reply = task[0]()
-                            self.log_data.update({task[1]:reply})
-
-                            # If we have a complete set of log points to save to a
-                            # file, we do so here.
-                            if all(field in self.log_data for field in self.curr_recipe.params):
-                                self.log_data.update({'Time':time.time()})
-                                self.AppendToLog()
-
-                        # Tasks like setting a setpoint have a function, a
-                        # setpoint value, and a timestamp
-                        elif len(task) == 4:
-                            task[0](task[1])
-
-                        # Make sure the queue isn't empty to avoid an IndexError
-                        empty = len(self.queue) == 0
-                    else:
-                        # If no task is ready, break out of the loop.
-                        break
-    
-    def CheckTemp(self):
-        self.curr_temp = self.curr_recipe.furnace.QueryTemp()
-        if abs(self.curr_temp-self.temp_setpoint) < 2:
-            return True
-        return False
+                # We are finished with a step and need to begin a new one.
+                # Append the setpoints for the next step to the queue.
+                self.AppendSetpoints()
+                self.ramping = True
+        else:
+            # There are tasks in the queue - we use a loop in case there are
+            # multiple tasks ready for execution.
+            while not empty:
+                task_ready = self.queue[0].timestamp < time.time()
+                if task_ready:
+                    task = self.queue.pop(0)
+                    reply = task.Execute()
+                    if reply:
+                        self.log_data.update({task.fieldname:reply})
+                        # If we have a complete set of log points to save to a
+                        # file, we do so here.
+                        if all(field in self.log_data for field in self.curr_recipe.params):
+                            self.log_data.update({'Time':time.time()-self.recipe_start_time})
+                            self.curr_temp = self.log_data['Temp']
+                            self.AppendToLog()
+                    # Make sure the queue isn't empty to avoid an IndexError
+                    empty = len(self.queue) == 0
+                else:
+                    # If no task is ready, break out of the loop.
+                    break
+                
+    def RampPoll(self):
+        timestamp = time.time()+self.curr_recipe.log_period
+        self.queue.append(QueueItem(self.curr_recipe.furnace.QueryTemp,timestamp,fieldname='Temp'))
+        for gas in self.curr_recipe.MFCs:
+            self.queue.append(QueueItem(self.curr_recipe.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
 
     def AppendSetpoints(self):
         try:
             self.step = self.curr_recipe.steps.pop(0)
-            self.step_duration = self.step[0]
-            self.temp_setpoint = self.step[1]
-            i = 0
-            self.gas_setpoints = []
-            for gas in self.curr_recipe.MFCs:
-                self.gas_setpoints.append(self.step[i+2])
-                self.queue.append([self.curr_recipe.MFCs[gas].SetFlow,self.gas_setpoints[i],gas,time.time()])
-                i = i + 1
-            self.queue.append([self.curr_recipe.furnace.SetTemp,self.temp_setpoint,'Temp',time.time()])
         except IndexError:
             self.running = False
+            return
+        timestamp = time.time()
+        self.step_duration = self.step[0]
+        self.temp_setpoint = self.step[1]
+        i = 0
+        self.gas_setpoints = []
+        for gas in self.curr_recipe.MFCs:
+            self.gas_setpoints.append(self.step[i+2])
+            self.queue.append(QueueItem(self.curr_recipe.MFCs[gas].SetFlow,timestamp,params=self.gas_setpoints[i],fieldname=gas))
+            i = i + 1
+        self.queue.append(QueueItem(self.curr_recipe.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
 
     def AppendStepLogpoints(self):
         timestamps = [i*self.curr_recipe.log_period + time.time() for i in range(int(self.step_duration/self.curr_recipe.log_period))]
         for timestamp in timestamps:
-            self.queue.append([self.curr_recipe.furnace.QueryTemp,'Temp',timestamp])
+            self.queue.append(QueueItem(self.curr_recipe.furnace.QueryTemp,timestamp,fieldname='Temp'))
             for gas in self.curr_recipe.MFCs:
-                self.queue.append([self.curr_recipe.MFCs[gas].QueryFlow,gas,timestamp])
+                self.queue.append(QueueItem(self.curr_recipe.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
 
     def AppendToLog(self):
+        # If this is the first time writing to the log, delete the file contents
+        # if that file already exists.
+        if self.log_initialize == False:
+            with open('test_log','w') as file:
+                # By taking no action, we will delete the file's contents
+                pass
+        
         print(self.log_data)
         print(self.curr_recipe.params)
         with open('test_log','a') as file:
             log_writer = csv.DictWriter(file, fieldnames=self.curr_recipe.params)
-            # if self.log_initialize == False:
-            #     # Add code to write the date and time here
-            #     log_writer.writeheader()
-            #     self.log_initialize = True
+            if self.log_initialize == False:
+                file.write(time.ctime() + '\n')
+                log_writer.writeheader()
+                self.log_initialize = True
             log_writer.writerow(self.log_data)
         self.log_data = {'Time':0}
     
@@ -345,6 +340,8 @@ class cvd_control(QtWidgets.QMainWindow):
             Status: <span style=\" font-weight:600;\">RUNNING</span></p></body>\
             </html>")
         self.running = True
+        self.recipe_start_time = time.time()
+        self.log_initialize = False
 
     def stop_recipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe \
