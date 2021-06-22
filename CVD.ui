@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>932</width>
-    <height>748</height>
+    <width>1107</width>
+    <height>946</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>932</width>
-    <height>748</height>
+    <width>1107</width>
+    <height>946</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -23,8 +23,8 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>521</x>
-      <y>9</y>
+      <x>690</x>
+      <y>40</y>
       <width>402</width>
       <height>608</height>
      </rect>
@@ -56,7 +56,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>460</y>
+      <y>670</y>
       <width>351</width>
       <height>113</height>
      </rect>
@@ -65,7 +65,7 @@
      <item>
       <widget class="QLabel" name="label_11">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Recipe Meta Data&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Recipe Metadata&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -104,7 +104,7 @@
      <rect>
       <x>10</x>
       <y>260</y>
-      <width>501</width>
+      <width>671</width>
       <height>34</height>
      </rect>
     </property>
@@ -157,150 +157,6 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>330</y>
-      <width>504</width>
-      <height>121</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
-        <widget class="QLabel" name="label_10">
-         <property name="text">
-          <string>Step No.</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Step 1</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Step 2</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_9">
-         <property name="text">
-          <string>Step 3</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Time</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_time_1"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_time_2"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_time_3"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Temp.</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_temp_1"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_temp_2"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_temp_3"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QLabel" name="label_gas_1">
-         <property name="text">
-          <string>Gas 1</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_heFlow_1"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_heFlow_2"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_heFlow_3"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="QLabel" name="label_gas_2">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gas 2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_h2Flow_1"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_h2Flow_2"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_h2Flow_3"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <item>
-        <widget class="QLabel" name="label_gas_3">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gas 3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_c2h4Flow_1"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_c2h4Flow_2"/>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_c2h4Flow_3"/>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
    <widget class="QLabel" name="label_12">
     <property name="geometry">
      <rect>
@@ -318,7 +174,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>580</y>
+      <y>790</y>
       <width>501</width>
       <height>101</height>
      </rect>
@@ -350,12 +206,12 @@
      <set>QDialogButtonBox::Apply</set>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>200</y>
-      <width>191</width>
+      <width>301</width>
       <height>27</height>
      </rect>
     </property>
@@ -377,13 +233,13 @@
      <item>
       <widget class="QLabel" name="label_author_3">
        <property name="text">
-        <string>Hz</string>
+        <string>samples per second</string>
        </property>
       </widget>
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -409,7 +265,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>11</x>
@@ -442,7 +298,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -650,7 +506,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>290</x>
@@ -697,13 +553,352 @@
      </item>
     </layout>
    </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>330</y>
+      <width>671</width>
+      <height>331</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0,0,0,0,0,0,0,0">
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Step No.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Step 1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Step 2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Step 3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Step 4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>Step 5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_21">
+         <property name="text">
+          <string>Step 6</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_25">
+         <property name="text">
+          <string>Step 7</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_22">
+         <property name="text">
+          <string>Step 8</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_23">
+         <property name="text">
+          <string>Step 9</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_24">
+         <property name="text">
+          <string>Step 10</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Time</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_1"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_2"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_3"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_4"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_5"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_6"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_7"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_8"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_9"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_time_10"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_12">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Param 1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_1"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_2"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_3"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_4"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_5"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_6"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_7"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_8"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_9"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param1_10"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_13">
+       <item>
+        <widget class="QLabel" name="label_26">
+         <property name="text">
+          <string>Param 2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_1"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_2"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_3"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_4"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_5"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_6"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_7"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_8"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_9"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param2_10"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_14">
+       <item>
+        <widget class="QLabel" name="label_27">
+         <property name="text">
+          <string>Param 3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_1"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_2"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_3"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_4"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_5"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_6"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_7"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_8"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_9"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param3_10"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_15">
+       <item>
+        <widget class="QLabel" name="label_28">
+         <property name="text">
+          <string>Param 4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_1"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_2"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_3"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_4"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_5"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_6"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_7"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_8"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_9"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param4_10"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_16">
+       <item>
+        <widget class="QLabel" name="label_29">
+         <property name="text">
+          <string>Param 5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_1"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_2"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_3"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_4"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_5"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_6"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_7"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_8"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_9"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_param5_10"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>932</width>
+     <width>1107</width>
      <height>22</height>
     </rect>
    </property>
