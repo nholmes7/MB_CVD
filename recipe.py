@@ -63,21 +63,13 @@ class Recipe():
         'HYDROGEN':104
     }
 
-    def __init__(self,filename,furnace,MFCs,press_trans) -> None:
+    def __init__(self,steps,columns,furnace,MFCs,press_trans) -> None:
         from equipment import pressure_trans
         from equipment import furnace
         from equipment import MFC
         self.log_initialize = False
         self.logging_state = False
-        self.steps = []
-        with open(filename,'r') as file:
-            for line in file:
-                if line[0] != '#':
-                    self.steps.append(line[:-1].split(','))
-                if line[:8] == '#Columns':
-                    columns = line[10:-1].split(',')
-        # Convert strings to numbers.
-        self.steps = [[float(j) for j in i] for i in self.steps]
+        self.steps = steps
         
         # Initialize the equipment objects
         self.furnace = furnace
@@ -87,7 +79,7 @@ class Recipe():
         self.times = []
         self.temps = []
         self.flow = {}
-        self.params = []
+        self.params = columns
 
         # Define the equipment based on the column labels and define the recipe
         # sequence lists
@@ -96,15 +88,10 @@ class Recipe():
             if column == 'Time':
                 self.times = [j[i] for j in self.steps]
             elif column == 'Temp':
-                # self.furnace = furnace(5)
                 self.temps = [int(j[i]) for j in self.steps]
-                self.params.append(column)
             else:
-                # self.MFCs[column] = MFC(Recipe.MFC_address_lookup[column])
                 self.flow[column] = [j[i] for j in self.steps]
-                self.params.append(column)
             i = i + 1
-        self.params.append('Time')
     
     def run(self):
         '''
