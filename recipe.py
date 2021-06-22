@@ -63,7 +63,7 @@ class Recipe():
         'HYDROGEN':104
     }
 
-    def __init__(self,filename) -> None:
+    def __init__(self,filename,furnace,MFCs,press_trans) -> None:
         from equipment import pressure_trans
         from equipment import furnace
         from equipment import MFC
@@ -80,15 +80,13 @@ class Recipe():
         self.steps = [[float(j) for j in i] for i in self.steps]
         
         # Initialize the equipment objects
-        self.furnace = None
-        self.MFCs = {}
-        self.press_trans = pressure_trans(123)
+        self.furnace = furnace
+        self.MFCs = MFCs
+        self.press_trans = press_trans
         # Initialize the recipe sequence lists
         self.times = []
         self.temps = []
         self.flow = {}
-        self.log_freq = 1
-        self.log_period = 1/self.log_freq
         self.params = []
 
         # Define the equipment based on the column labels and define the recipe
@@ -98,11 +96,11 @@ class Recipe():
             if column == 'Time':
                 self.times = [j[i] for j in self.steps]
             elif column == 'Temp':
-                self.furnace = furnace(5)
+                # self.furnace = furnace(5)
                 self.temps = [int(j[i]) for j in self.steps]
                 self.params.append(column)
             else:
-                self.MFCs[column] = MFC(Recipe.MFC_address_lookup[column])
+                # self.MFCs[column] = MFC(Recipe.MFC_address_lookup[column])
                 self.flow[column] = [j[i] for j in self.steps]
                 self.params.append(column)
             i = i + 1
@@ -291,14 +289,17 @@ class QueueItem():
     Execute()
     '''
 
-    def __init__(self,func,timestamp,params = None,fieldname = None) -> None:
+    def __init__(self,func,timestamp,params = None,fieldname = None):
         self.func = func
         self.timestamp = timestamp
         self.params = params
         self.fieldname = fieldname
 
     def Execute(self):
-        reply = self.func(self.params)
+        if self.params == None:
+            reply = self.func()
+        else:
+            reply = self.func(self.params)
         return reply
 
 if __name__ == '__main__':

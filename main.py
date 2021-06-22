@@ -4,7 +4,8 @@ from datetime import date
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-import threading, time, serial, math, csv, pyqtgraph
+import threading, time, serial, math, csv, pyqtgraph,random
+import pandas as pd
 from equipment import *
 from recipe import Recipe,QueueItem
 
@@ -44,8 +45,8 @@ class cvd_control(QtWidgets.QMainWindow):
         # define variables for dynamic data
         # self.time = list(range(100))
         # self.temp = [math.sin(time/12) for time in self.time]
-        self.time = []
-        self.temp = []
+        # self.time = []
+        # self.temp = []
         # self.gas_1_flow = [math.sin(time/24) for time in self.time]
         # self.gas_2_flow = [math.sin(time/12) for time in self.time]
         # self.gas_3_flow = [math.sin(time/6) for time in self.time]
@@ -56,15 +57,20 @@ class cvd_control(QtWidgets.QMainWindow):
         pen_3 = pyqtgraph.mkPen(color='#f768a1',width=2)
 
         # plot the initial points onto the graphs
-        self.temp_line = self.ui.temp_graph.plot(self.time,self.temp,pen=pen_1)
+        self.temp_line = self.ui.temp_graph.plot(pen=pen_1)
         # self.gas_1_line = self.ui.gas_graph.plot(self.time,self.gas_1_flow,name='Gas 1',pen=pen_1)
         # self.gas_2_line = self.ui.gas_graph.plot(self.time,self.gas_2_flow,name='Gas 2',pen=pen_2)
         # self.gas_3_line = self.ui.gas_graph.plot(self.time,self.gas_3_flow,name='Gas 3',pen=pen_3)
 
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(250)
-        self.timer.timeout.connect(self.update_plot)
-        # self.timer.start()
+        # Define the devices
+
+        self.furnace = furnace(5)
+        self.MFCs = {'Ethylene':MFC(101),
+            'Argon':MFC(102),
+            'Helium':MFC(103),
+            'Hydrogen':MFC(104)
+            }
+        self.press_trans = pressure_trans(123)
 
         self.loop_timer = QtCore.QTimer()
         self.loop_timer.setInterval(250)
@@ -79,11 +85,16 @@ class cvd_control(QtWidgets.QMainWindow):
         self.gas_setpoints = []
         self.step = []
         self.step_duration = 0
-        self.recipe_start_time = 0
+        self.recipe_start_time = time.time()
 
         self.curr_recipe = None
         self.running = False
         self.log_initialize = False
+        self.log_period = 1
+
+        self.plot_data = pd.DataFrame()
+        self.plot_history = 10
+        self.params = ['Temp']
 
     def ExecuteQueue(self):
         '''
@@ -91,23 +102,26 @@ class cvd_control(QtWidgets.QMainWindow):
         '''
         empty = len(self.queue) == 0
         if empty:
-            if self.ramping:
-                temp_reached = abs(self.curr_temp-self.temp_setpoint) < 2
-                if temp_reached:
-                    # We have reached temperature, append all the log points
-                    # for the duration of the recipe step to the queue.
-                    self.AppendStepLogpoints()
-                    self.ramping = False
+            if self.running:
+                if self.ramping:
+                    temp_reached = abs(self.curr_temp-self.temp_setpoint) < 2
+                    if temp_reached:
+                        # We have reached temperature, append all the log points
+                        # for the duration of the recipe step to the queue.
+                        self.AppendStepLogpoints()
+                        self.ramping = False
+                    else:
+                        # We have not reached the step temperature and are still
+                        # ramping.  Append a single query of all parameters to 
+                        # the queue.
+                        self.RampPoll() 
                 else:
-                    # We have not reached the step temperature and are still
-                    # ramping.  Append a single query of all parameters to 
-                    # the queue.
-                    self.RampPoll() 
+                    # We are finished with a step and need to begin a new one.
+                    # Append the setpoints for the next step to the queue.
+                    self.AppendSetpoints()
+                    self.ramping = True
             else:
-                # We are finished with a step and need to begin a new one.
-                # Append the setpoints for the next step to the queue.
-                self.AppendSetpoints()
-                self.ramping = True
+                self.RampPoll()
         else:
             # There are tasks in the queue - we use a loop in case there are
             # multiple tasks ready for execution.
@@ -118,23 +132,32 @@ class cvd_control(QtWidgets.QMainWindow):
                     reply = task.Execute()
                     if reply:
                         self.log_data.update({task.fieldname:reply})
+                        # If we have a complete set of plot points to update, 
+                        # we do so here.
+                        if all(field in self.log_data for field in self.params):
+                            self.log_data.update({'Time':time.time()-self.recipe_start_time})
+                            self.plot_data = self.plot_data.append(self.log_data,ignore_index=True)
+                            self.UpdatePlots()
+                            self.log_data = {}
                         # If we have a complete set of log points to save to a
                         # file, we do so here.
-                        if all(field in self.log_data for field in self.curr_recipe.params):
-                            self.log_data.update({'Time':time.time()-self.recipe_start_time})
-                            self.curr_temp = self.log_data['Temp']
-                            self.AppendToLog()
+                        if self.running:
+                            if all(field in self.log_data for field in self.curr_recipe.params):
+                                self.log_data.update({'Time':time.time()-self.recipe_start_time})
+                                self.curr_temp = self.log_data['Temp']                                
+                                self.AppendToLog()
+                                self.log_data = {'Time':0}
                     # Make sure the queue isn't empty to avoid an IndexError
                     empty = len(self.queue) == 0
                 else:
                     # If no task is ready, break out of the loop.
                     break
-                
+
     def RampPoll(self):
-        timestamp = time.time()+self.curr_recipe.log_period
-        self.queue.append(QueueItem(self.curr_recipe.furnace.QueryTemp,timestamp,fieldname='Temp'))
-        for gas in self.curr_recipe.MFCs:
-            self.queue.append(QueueItem(self.curr_recipe.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
+        timestamp = time.time()+self.log_period
+        self.queue.append(QueueItem(self.furnace.QueryTemp,timestamp,fieldname='Temp'))
+        for gas in self.MFCs:
+            self.queue.append(QueueItem(self.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
 
     def AppendSetpoints(self):
         try:
@@ -147,18 +170,18 @@ class cvd_control(QtWidgets.QMainWindow):
         self.temp_setpoint = self.step[1]
         i = 0
         self.gas_setpoints = []
-        for gas in self.curr_recipe.MFCs:
+        for gas in self.MFCs:
             self.gas_setpoints.append(self.step[i+2])
-            self.queue.append(QueueItem(self.curr_recipe.MFCs[gas].SetFlow,timestamp,params=self.gas_setpoints[i],fieldname=gas))
+            self.queue.append(QueueItem(self.MFCs[gas].SetFlow,timestamp,params=self.gas_setpoints[i],fieldname=gas))
             i = i + 1
-        self.queue.append(QueueItem(self.curr_recipe.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
+        self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
 
     def AppendStepLogpoints(self):
-        timestamps = [i*self.curr_recipe.log_period + time.time() for i in range(int(self.step_duration/self.curr_recipe.log_period))]
+        timestamps = [i*self.log_period + time.time() for i in range(int(self.step_duration/self.log_period))]
         for timestamp in timestamps:
-            self.queue.append(QueueItem(self.curr_recipe.furnace.QueryTemp,timestamp,fieldname='Temp'))
-            for gas in self.curr_recipe.MFCs:
-                self.queue.append(QueueItem(self.curr_recipe.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
+            self.queue.append(QueueItem(self.furnace.QueryTemp,timestamp,fieldname='Temp'))
+            for gas in self.MFCs:
+                self.queue.append(QueueItem(self.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
 
     def AppendToLog(self):
         # If this is the first time writing to the log, delete the file contents
@@ -177,7 +200,6 @@ class cvd_control(QtWidgets.QMainWindow):
                 log_writer.writeheader()
                 self.log_initialize = True
             log_writer.writerow(self.log_data)
-        self.log_data = {'Time':0}
     
     def return_ui_fields(self):
         ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
@@ -309,28 +331,19 @@ class cvd_control(QtWidgets.QMainWindow):
             column.setText(column_names[i])
             i += 1
     
-    def update_plot(self):
+    def UpdatePlots(self):
         # update the variables by chopping off the first value and adding one on the end
-        try:
-            self.time.append(self.time[-1] + 1)
-        except IndexError:
-            self.time.append(1)
-        self.time = self.time[-10:]
-
-        # self.temp.append(poll_pressure())
-        # self.temp = self.temp[-10:]
-
-        # self.gas_1_flow = self.gas_1_flow[1:]
-        # self.gas_1_flow += [math.sin(self.time[-1]/24)]
-
-        # self.gas_2_flow = self.gas_2_flow[1:]
-        # self.gas_2_flow += [math.sin(self.time[-1]/12)]
-
-        # self.gas_3_flow = self.gas_3_flow[1:]
-        # self.gas_3_flow += [math.sin(self.time[-1]/6)]
+        # print(self.plot_data.iloc[-10:])
+        start_time = self.plot_data['Time'].iloc[-1]-self.plot_history
+        plot_time = self.plot_data['Time'][self.plot_data['Time']>start_time]
+        plot_temp = self.plot_data['Temp'][self.plot_data['Time']>start_time]
+        plot_time.reset_index(drop=True,inplace=True)
+        plot_temp.reset_index(drop=True,inplace=True)
+        # print(plot_time)
+        # print(plot_temp)
 
         # update the plots
-        self.temp_line.setData(self.time,self.temp)
+        self.temp_line.setData(plot_time,plot_temp)
         # self.gas_1_line.setData(self.time,self.gas_1_flow)
         # self.gas_2_line.setData(self.time,self.gas_2_flow)
         # self.gas_3_line.setData(self.time,self.gas_3_flow)
