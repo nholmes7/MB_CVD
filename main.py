@@ -26,13 +26,13 @@ class cvd_control(QtWidgets.QMainWindow):
 
         # make required connections
         self.ui.save_button.clicked.connect(self.save_recipe)
-        self.ui.open_button.clicked.connect(self.open_recipe)
+        self.ui.open_button.clicked.connect(self.OpenRecipe)
         self.ui.button_start_recipe.clicked.connect(self.start_recipe)
         self.ui.button_stop_recipe.clicked.connect(self.stop_recipe)
         self.ui.button_apply_setpoints.clicked.connect(self.apply_setpoints)
 
-        # configure the plots and their settings
-        background_colour = self.palette().color(QtGui.QPalette.Window)         # gets the background window colour to use as the plot background colour
+        # Configure the plots and their settings.
+        background_colour = self.palette().color(QtGui.QPalette.Window)
         styles = {"color": 'k', "font-size": "14px"}
         self.ui.temp_graph.setBackground(background_colour)
         self.ui.temp_graph.setTitle('Temperature',color='k',size = '16pt')
@@ -42,16 +42,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.gas_graph.addLegend(offset = (1,-125))
         self.ui.gas_graph.setLabel("bottom", "Time (s)", **styles)
 
-        # define variables for dynamic data
-        # self.time = list(range(100))
-        # self.temp = [math.sin(time/12) for time in self.time]
-        # self.time = []
-        # self.temp = []
-        # self.gas_1_flow = [math.sin(time/24) for time in self.time]
-        # self.gas_2_flow = [math.sin(time/12) for time in self.time]
-        # self.gas_3_flow = [math.sin(time/6) for time in self.time]
-
-        # Define the devices
+        # Define all devices.
         self.furnace = furnace(5)
         self.MFCs = {'Ethylene':MFC(101),
             'Argon':MFC(102),
@@ -60,27 +51,28 @@ class cvd_control(QtWidgets.QMainWindow):
             }
         self.press_trans = pressure_trans(123)
 
-        # these pen objects are used when graphing in order to affect how the lines look
+        # Pen objects used for plotting style.
         plot_colours = ['#7a0177','#c51b8a','#f768a1','#fa9fb5']
-        pens = {}
+        self.pens = {}
         i = 0
         for gas in self.MFCs:
-            pens[gas] = pyqtgraph.mkPen(color=plot_colours[i],width=2)
+            self.pens[gas] = pyqtgraph.mkPen(color=plot_colours[i],width=2)
             i = i+1
 
-        # plot the initial points onto the graphs
-        self.temp_line = self.ui.temp_graph.plot(pen=pens['Ethylene'])
+        # Initialize plots.
+        self.temp_line = self.ui.temp_graph.plot(pen=self.pens['Ethylene'])
         self.gas_lines = {}
         for gas in self.MFCs:
-            self.gas_lines[gas] = self.ui.gas_graph.plot(name=gas,pen=pens[gas])
+            self.gas_lines[gas] = self.ui.gas_graph.plot(name=gas,pen=self.pens[gas])
 
+        # Main loop timer used for queue execution.
         self.loop_timer = QtCore.QTimer()
         self.loop_timer.setInterval(250)
         self.loop_timer.timeout.connect(self.ExecuteQueue)
         self.loop_timer.start()
 
         self.queue = []
-        self.log_data = {'Time':0}
+        self.log_data = {}
         self.ramping = False
         self.curr_temp = 0
         self.temp_setpoint = 0
@@ -140,15 +132,11 @@ class cvd_control(QtWidgets.QMainWindow):
                             self.log_data.update({'Time':time.time()-self.recipe_start_time})
                             self.plot_data = self.plot_data.append(self.log_data,ignore_index=True)
                             self.UpdatePlots()
-                            self.log_data = {}
-                        # If we have a complete set of log points to save to a
-                        # file, we do so here.
-                        if self.running:
-                            if all(field in self.log_data for field in self.curr_recipe.params):
-                                self.log_data.update({'Time':time.time()-self.recipe_start_time})
+                            # If the recipe is running, we save data to a file.
+                            if self.running:
                                 self.curr_temp = self.log_data['Temp']                                
                                 self.AppendToLog()
-                                self.log_data = {'Time':0}
+                            self.log_data = {}
                     # Make sure the queue isn't empty to avoid an IndexError
                     empty = len(self.queue) == 0
                 else:
@@ -202,13 +190,6 @@ class cvd_control(QtWidgets.QMainWindow):
                 log_writer.writeheader()
                 self.log_initialize = True
             log_writer.writerow(self.log_data)
-    
-    def return_ui_fields(self):
-        ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
-                     [self.ui.lineEdit_time_2,self.ui.lineEdit_temp_2,self.ui.lineEdit_heFlow_2,self.ui.lineEdit_h2Flow_2,self.ui.lineEdit_c2h4Flow_2],
-                     [self.ui.lineEdit_time_3,self.ui.lineEdit_temp_3,self.ui.lineEdit_heFlow_3,self.ui.lineEdit_h2Flow_3,self.ui.lineEdit_c2h4Flow_3]
-                    ]
-        return ui_fields
     
     def save_recipe(self):
         
@@ -281,8 +262,8 @@ class cvd_control(QtWidgets.QMainWindow):
         with open(fileName,'w') as recipe:
             recipe.writelines(text_to_save)
 
-    def open_recipe(self):        
-        # show open file dialogue and write selected file path to fileName variable
+    def OpenRecipe(self):        
+        # Show open file dialogue and write file path to fileName variable.
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -292,8 +273,11 @@ class cvd_control(QtWidgets.QMainWindow):
                         "All Files (*);;Python Files (*.py)",
                         options=options)
         
-        # create a 2D list of the ui fields we will modify with the recipe file
-        ui_fields = self.return_ui_fields()
+        # Create a 2D list of the ui fields we will modify with the recipe file.
+        ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
+                     [self.ui.lineEdit_time_2,self.ui.lineEdit_temp_2,self.ui.lineEdit_heFlow_2,self.ui.lineEdit_h2Flow_2,self.ui.lineEdit_c2h4Flow_2],
+                     [self.ui.lineEdit_time_3,self.ui.lineEdit_temp_3,self.ui.lineEdit_heFlow_3,self.ui.lineEdit_h2Flow_3,self.ui.lineEdit_c2h4Flow_3]
+                    ]
         steps = []
 
         # open file and copy lines to fields in GUI
@@ -308,22 +292,18 @@ class cvd_control(QtWidgets.QMainWindow):
                 elif line[0:9] == '#Columns:':
                     no_spaces = line.replace(' ','')
                     columns = no_spaces[9:-1].split(',')
-                elif line[0] != '#':                        # values for the actual recipe
+                elif line[0] != '#':
                     steps.append(line[:-1].split(','))
-                    # recipe_fields = line[:-1].split(',')   # [:-1] is to exclude new line char
-                    # j = 0
-                    # for field in ui_fields[i]:
-                    #     field.setText(recipe_fields[j])
-                    #     j += 1
-                    # i += 1
 
-        i = 0   # loop counter
+        # Update UI recipe values
+        i = 0
         for step in steps:
             j = 0
             for field in ui_fields[i]:
                 field.setText(step[j])
                 j = j+1
             i = i+1
+        
         # Convert strings to numbers.
         steps = [[float(j) for j in i] for i in steps]
         
@@ -332,14 +312,35 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.label_creation_date.setText(creation_date)
         self.ui.label_last_updated.setText(last_modified)
 
-        # set the labels for the gas columns from the recipe text file
+        # set the UI gas column labels
         column_labels = [self.ui.label_gas_1,self.ui.label_gas_2,self.ui.label_gas_3]
         i = 2
         for column in column_labels:
             column.setText(columns[i])
             i += 1
 
+        # Update devices based on what's required by the recipe.
+        if 'Temp' not in columns:
+            self.furnace = None
+
+        to_delete = []
+        for gas in self.MFCs:
+            if gas not in columns:
+                to_delete.append(gas)
+
+        for device in to_delete:
+            del self.MFCs[device]
+
+        columns.remove('Time')
+        self.params = columns
+
+        # Initialize the recipe object
         self.curr_recipe = Recipe(steps,columns,self.furnace,self.MFCs,self.press_trans)
+
+        # Clear the gas graph and re-plot
+        self.ui.gas_graph.clear()
+        for gas in self.MFCs:
+            self.gas_lines[gas] = self.ui.gas_graph.plot(name=gas,pen=self.pens[gas])
     
     def UpdatePlots(self):
         # update the variables by chopping off the first value and adding one on the end
