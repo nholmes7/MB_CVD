@@ -96,6 +96,7 @@ class cvd_control(QtWidgets.QMainWindow):
         '''
         empty = len(self.queue) == 0
         if empty:
+            # If the queue is empty, we need to add tasks to it.
             if self.running:
                 if self.ramping:
                     temp_reached = abs(self.curr_temp-self.temp_setpoint) < 2
@@ -115,6 +116,8 @@ class cvd_control(QtWidgets.QMainWindow):
                     self.AppendSetpoints()
                     self.ramping = True
             else:
+                # In the event that a recipe is not running, we would still like
+                # to monitor the devices.  We do that with RampPoll()
                 self.RampPoll()
         else:
             # There are tasks in the queue - we use a loop in case there are
@@ -274,10 +277,18 @@ class cvd_control(QtWidgets.QMainWindow):
                         options=options)
         
         # Create a 2D list of the ui fields we will modify with the recipe file.
-        ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_temp_1,self.ui.lineEdit_heFlow_1,self.ui.lineEdit_h2Flow_1,self.ui.lineEdit_c2h4Flow_1],
-                     [self.ui.lineEdit_time_2,self.ui.lineEdit_temp_2,self.ui.lineEdit_heFlow_2,self.ui.lineEdit_h2Flow_2,self.ui.lineEdit_c2h4Flow_2],
-                     [self.ui.lineEdit_time_3,self.ui.lineEdit_temp_3,self.ui.lineEdit_heFlow_3,self.ui.lineEdit_h2Flow_3,self.ui.lineEdit_c2h4Flow_3]
+        ui_fields = [[self.ui.lineEdit_time_1,self.ui.lineEdit_param1_1,self.ui.lineEdit_param2_1,self.ui.lineEdit_param3_1,self.ui.lineEdit_param4_1,self.ui.lineEdit_param5_1],
+                    [self.ui.lineEdit_time_2,self.ui.lineEdit_param1_2,self.ui.lineEdit_param2_2,self.ui.lineEdit_param3_2,self.ui.lineEdit_param4_2,self.ui.lineEdit_param5_2],
+                    [self.ui.lineEdit_time_3,self.ui.lineEdit_param1_3,self.ui.lineEdit_param2_3,self.ui.lineEdit_param3_3,self.ui.lineEdit_param4_3,self.ui.lineEdit_param5_3],
+                    [self.ui.lineEdit_time_4,self.ui.lineEdit_param1_4,self.ui.lineEdit_param2_4,self.ui.lineEdit_param3_4,self.ui.lineEdit_param4_4,self.ui.lineEdit_param5_4],
+                    [self.ui.lineEdit_time_5,self.ui.lineEdit_param1_5,self.ui.lineEdit_param2_5,self.ui.lineEdit_param3_5,self.ui.lineEdit_param4_5,self.ui.lineEdit_param5_5],
+                    [self.ui.lineEdit_time_6,self.ui.lineEdit_param1_6,self.ui.lineEdit_param2_6,self.ui.lineEdit_param3_6,self.ui.lineEdit_param4_6,self.ui.lineEdit_param5_6],
+                    [self.ui.lineEdit_time_7,self.ui.lineEdit_param1_7,self.ui.lineEdit_param2_7,self.ui.lineEdit_param3_7,self.ui.lineEdit_param4_7,self.ui.lineEdit_param5_7],
+                    [self.ui.lineEdit_time_8,self.ui.lineEdit_param1_8,self.ui.lineEdit_param2_8,self.ui.lineEdit_param3_8,self.ui.lineEdit_param4_8,self.ui.lineEdit_param5_8],
+                    [self.ui.lineEdit_time_9,self.ui.lineEdit_param1_9,self.ui.lineEdit_param2_9,self.ui.lineEdit_param3_9,self.ui.lineEdit_param4_9,self.ui.lineEdit_param5_9],
+                    [self.ui.lineEdit_time_10,self.ui.lineEdit_param1_10,self.ui.lineEdit_param2_10,self.ui.lineEdit_param3_10,self.ui.lineEdit_param4_10,self.ui.lineEdit_param5_10]
                     ]
+
         steps = []
 
         # open file and copy lines to fields in GUI
@@ -300,7 +311,10 @@ class cvd_control(QtWidgets.QMainWindow):
         for step in steps:
             j = 0
             for field in ui_fields[i]:
-                field.setText(step[j])
+                try:
+                    field.setText(step[j])
+                except IndexError:
+                    break
                 j = j+1
             i = i+1
         
@@ -312,11 +326,19 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.label_creation_date.setText(creation_date)
         self.ui.label_last_updated.setText(last_modified)
 
-        # set the UI gas column labels
-        column_labels = [self.ui.label_gas_1,self.ui.label_gas_2,self.ui.label_gas_3]
-        i = 2
+        # set the UI column labels
+        column_labels = [self.ui.column_1_label,
+            self.ui.column_2_label,
+            self.ui.column_3_label,
+            self.ui.column_4_label,
+            self.ui.column_5_label
+            ]
+        i = 1
         for column in column_labels:
-            column.setText(columns[i])
+            try:
+                column.setText(columns[i])
+            except IndexError:
+                break
             i += 1
 
         # Update devices based on what's required by the recipe.

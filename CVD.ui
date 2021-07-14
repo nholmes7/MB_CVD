@@ -553,7 +553,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -688,7 +688,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_12">
        <item>
-        <widget class="QLabel" name="label_3">
+        <widget class="QLabel" name="column_1_label">
          <property name="text">
           <string>Param 1</string>
          </property>
@@ -729,7 +729,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_13">
        <item>
-        <widget class="QLabel" name="label_26">
+        <widget class="QLabel" name="column_2_label">
          <property name="text">
           <string>Param 2</string>
          </property>
@@ -770,7 +770,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_14">
        <item>
-        <widget class="QLabel" name="label_27">
+        <widget class="QLabel" name="column_3_label">
          <property name="text">
           <string>Param 3</string>
          </property>
@@ -811,7 +811,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_15">
        <item>
-        <widget class="QLabel" name="label_28">
+        <widget class="QLabel" name="column_4_label">
          <property name="text">
           <string>Param 4</string>
          </property>
@@ -852,7 +852,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_16">
        <item>
-        <widget class="QLabel" name="label_29">
+        <widget class="QLabel" name="column_5_label">
          <property name="text">
           <string>Param 5</string>
          </property>
