@@ -28,7 +28,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.save_button.clicked.connect(self.save_recipe)
         self.ui.open_button.clicked.connect(self.OpenRecipe)
         self.ui.button_start_recipe.clicked.connect(self.start_recipe)
-        self.ui.button_stop_recipe.clicked.connect(self.stop_recipe)
+        self.ui.button_stop_recipe.clicked.connect(self.StopRecipe)
         self.ui.button_apply_setpoints.clicked.connect(self.apply_setpoints)
 
         # Configure the plots and their settings.
@@ -87,7 +87,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.log_period = 1
 
         self.plot_data = pd.DataFrame()
-        self.plot_history = 10
+        self.plot_history = 120
         self.params = ['Temp','Ethylene','Argon','Helium','Hydrogen']
 
     def ExecuteQueue(self):
@@ -131,7 +131,12 @@ class cvd_control(QtWidgets.QMainWindow):
                         self.log_data.update({task.fieldname:reply})
                         # If we have a complete set of plot points to update, 
                         # we do so here.
+                        # print(self.log_data)
+                        # print(self.params)
                         if all(field in self.log_data for field in self.params):
+                            print('Time to update plots')
+                            print(self.log_data)
+                            print(self.params)
                             self.log_data.update({'Time':time.time()-self.recipe_start_time})
                             self.plot_data = self.plot_data.append(self.log_data,ignore_index=True)
                             self.UpdatePlots()
@@ -157,7 +162,7 @@ class cvd_control(QtWidgets.QMainWindow):
         try:
             self.step = self.curr_recipe.steps.pop(0)
         except IndexError:
-            self.running = False
+            self.StopRecipe()
             return
         timestamp = time.time()
         self.step_duration = self.step[0]
@@ -193,10 +198,13 @@ class cvd_control(QtWidgets.QMainWindow):
                 # By taking no action, we will delete the file's contents
                 pass
         
-        print(self.log_data)
-        print(self.curr_recipe.params)
+        # print(self.log_data)
+        # names = self.curr_recipe.params
+        # names.append('Time')
+        # print(names)
+        # print(self.curr_recipe.params)
         with open('test_log','a') as file:
-            log_writer = csv.DictWriter(file, fieldnames=self.curr_recipe.params)
+            log_writer = csv.DictWriter(file, fieldnames=self.log_data.keys())
             if self.log_initialize == False:
                 file.write(time.ctime() + '\n')
                 log_writer.writeheader()
@@ -369,16 +377,27 @@ class cvd_control(QtWidgets.QMainWindow):
         for device in to_delete:
             del self.MFCs[device]
 
-        columns.remove('Time')
-        self.params = columns
+        # print('Columns: ')
 
+        # print(columns)
         # Initialize the recipe object
         self.curr_recipe = Recipe(steps,columns,self.furnace,self.MFCs,self.press_trans)
+        # print(self.curr_recipe.params)
+        columns.remove('Time')
+        # print(self.curr_recipe.params)
+
+        self.params = columns
+        print('self.params')
+        print(self.params)
 
         # Clear the gas graph and re-plot
         self.ui.gas_graph.clear()
         for gas in self.MFCs:
             self.gas_lines[gas] = self.ui.gas_graph.plot(name=gas,pen=self.pens[gas])
+
+        #Clear the temp graph and re-plot
+        self.ui.temp_graph.clear()
+        self.temp_line = self.ui.temp_graph.plot(pen=self.pens['Ethylene'])
     
     def UpdatePlots(self):
         # update the variables by chopping off the first value and adding one on the end
@@ -406,7 +425,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.recipe_start_time = time.time()
         self.log_initialize = False
 
-    def stop_recipe(self):
+    def StopRecipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe \
             Status: <span style=\" font-weight:600;\">STOPPED</span></p></body>\
             </html>")

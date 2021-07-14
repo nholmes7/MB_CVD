@@ -36,7 +36,7 @@ class MFC:
     def __init__(self,address) -> None:
         self.address = address
         import serial
-        # self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 
     def SetFlow(self,set_point):
         '''
@@ -77,14 +77,14 @@ class MFC:
             Returns:
                 flow_rate (float): the mass flow rate measured by the device
         '''
-        # try:
-        #     reply_text = self.__SendCommand('FX?')
-        #     print('Flow reported as ' + reply_text + 'sccm.')
-        #     flow_rate = float(reply_text)
-        #     return flow_rate
-        # except Warning:
-        #     print('Unsuccessful communication with MFC ' + str(self.address))
-        return random.random()*100
+        try:
+            reply_text = self.__SendCommand('FX?')
+            print('Flow reported as ' + reply_text + 'sccm.')
+            flow_rate = float(reply_text)
+            return flow_rate
+        except Warning:
+            print('Unsuccessful communication with MFC ' + str(self.address))
+        # return random.random()*100
 
     def QueryOpMode(self):
         '''
@@ -259,7 +259,7 @@ class furnace:
         if len(self.address) == 1:
             self.address = '0' + self.address
         import serial
-        # self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=9600,timeout=3)
 
     def SetTemp(self,setpoint):
         '''
@@ -299,22 +299,22 @@ class furnace:
             Returns:
                 temperature (int): temperature reported by the furnace
         '''
-        # function_code = '03'
-        # address = '0001'
-        # no_of_words = '0001'
-        # response_length = 5 + int(no_of_words,base=16)*2
-        # command = self.address + function_code + address + no_of_words
-        # CRC = self.__CRC(command)
-        # command += CRC
-        # try:
-        #     response = self.__SendCommand(command,response_length,function_code)
-        #     temperature = int.from_bytes(response[3:-2],byteorder='big')
-        #     print('Temperature is ' + str(temperature) + ' C.')
-        # except Warning:
-        #     raise Warning('Unsuccessful communication with tube furnace.')
+        function_code = '03'
+        address = '0001'
+        no_of_words = '0001'
+        response_length = 5 + int(no_of_words,base=16)*2
+        command = self.address + function_code + address + no_of_words
+        CRC = self.__CRC(command)
+        command += CRC
+        try:
+            response = self.__SendCommand(command,response_length,function_code)
+            temperature = int.from_bytes(response[3:-2],byteorder='big')
+            print('Temperature is ' + str(temperature) + ' C.')
+        except Warning:
+            raise Warning('Unsuccessful communication with tube furnace.')
 
-        # return temperature
-        return random.random()*100 + 100
+        return temperature
+        # return random.random()*100 + 100
 
     def ChangeAddress(self,new_address):
         pass
@@ -472,7 +472,7 @@ class pressure_trans:
     '''
     def __init__(self,address) -> None:
         import serial
-        # self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
+        self.ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200,timeout=3)
         self.address = str(address)
 
     def QueryPressure(self):
@@ -485,16 +485,16 @@ class pressure_trans:
                 pressure (float): the pressure value in whatever units the
                     transducer is currently set to
         '''
-        # command = '#' + self.address + 'P\r\n'
-        # try:
-        #     reply = self.__SendCommand(command)
-        #     pressure = self.__ParsePressure(reply)
-        #     print('Reported pressure: ' + str(pressure) + ' torr.')
-        #     return pressure
-        # except Warning:
-        #     print('Unsuccessful communication with pressure transducer ' + self.address)
+        command = '#' + self.address + 'P\r\n'
+        try:
+            reply = self.__SendCommand(command)
+            pressure = self.__ParsePressure(reply)
+            print('Reported pressure: ' + str(pressure) + ' torr.')
+            return pressure
+        except Warning:
+            print('Unsuccessful communication with pressure transducer ' + self.address)
 
-        return random.random()*100 + 200
+        # return random.random()*100 + 200
 
     def ReportStatus(self):
         '''
@@ -591,9 +591,15 @@ class pressure_trans:
 
 if __name__ == '__main__':
     import serial
-    test_furnace = furnace(5)
+    # test_furnace = furnace(5)
     
-    # test_furnace.SetTemp(55)
-    test_press = pressure_trans(123)
-    test_furnace.QueryTemp()
-    test_press.QueryPressure()
+    # # test_furnace.SetTemp(55)
+    # test_press = pressure_trans(123)
+    # test_furnace.QueryTemp()
+    # test_press.QueryPressure()
+
+    test_MFC = MFC(101)
+
+    test_MFC.QueryFlow()
+    test_MFC.SetFlow(0)
+    test_MFC.QueryFlow()
