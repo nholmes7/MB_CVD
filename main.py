@@ -153,6 +153,7 @@ class cvd_control(QtWidgets.QMainWindow):
             self.queue.append(QueueItem(self.MFCs[gas].QueryFlow,timestamp,fieldname=gas))
 
     def AppendSetpoints(self):
+        # Grab the next step, terminate the recipe if no steps are left.
         try:
             self.step = self.curr_recipe.steps.pop(0)
         except IndexError:
@@ -169,7 +170,15 @@ class cvd_control(QtWidgets.QMainWindow):
             i = i + 1
         self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
 
+    def AppendManualSetpoints(self,manual_gases,manual_temp):
+        timestamp = time.time()
+        for gas in manual_gases:
+            self.queue.append(QueueItem(self.MFCs[gas].SetFlow,timestamp,params=manual_gases[gas],fieldname=gas))
+        if manual_temp:
+            self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=manual_temp,fieldname='Temp'))
+
     def AppendStepLogpoints(self):
+
         timestamps = [i*self.log_period + time.time() for i in range(int(self.step_duration/self.log_period))]
         for timestamp in timestamps:
             self.queue.append(QueueItem(self.furnace.QueryTemp,timestamp,fieldname='Temp'))
@@ -326,19 +335,26 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ui.label_creation_date.setText(creation_date)
         self.ui.label_last_updated.setText(last_modified)
 
-        # set the UI column labels
+        # set the UI labels
         column_labels = [self.ui.column_1_label,
             self.ui.column_2_label,
             self.ui.column_3_label,
             self.ui.column_4_label,
             self.ui.column_5_label
             ]
-        i = 1
-        for column in column_labels:
-            try:
-                column.setText(columns[i])
-            except IndexError:
-                break
+        manual_labels = [self.ui.label_gas_4,
+            self.ui.label_gas_5,
+            self.ui.label_gas_6
+            ]
+        i = 0
+        j = 0
+        for column in columns:
+            if column == 'Time':
+                continue
+            if column != 'Temp':
+                manual_labels[j].setText(column + ':')
+                j += 1
+            column_labels[i].setText(column)
             i += 1
 
         # Update devices based on what's required by the recipe.
@@ -397,13 +413,27 @@ class cvd_control(QtWidgets.QMainWindow):
         self.running = False
 
     def apply_setpoints(self):
-        # self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + self.ui.lineEdit_2.text() + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
-        if self.ui.lineEdit_3.text() != '':
-            self.ui.label_gas_1_setpoint.setText('Gas 1: ' + self.ui.lineEdit_3.text() + ' sccm')
-        if self.ui.lineEdit_4.text() != '':
-            self.ui.label_gas_2_setpoint.setText('Gas 2: ' + self.ui.lineEdit_4.text() + ' sccm')
-        if self.ui.lineEdit_5.text() != '':
-            self.ui.label_gas_3_setpoint.setText('Gas 3: ' + self.ui.lineEdit_5.text() + ' sccm')
+        manual_gas_keys = []
+        manual_gas_values = []
+        manual_temp = None
+        if self.ui.manual_temp.text() != '':
+            self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + self.ui.manual_temp.text() + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+            manual_temp = float(self.ui.manual_temp.text())
+        if self.ui.manual_gas1.text() != '':
+            self.ui.label_gas_1_setpoint.setText('Gas 1: ' + self.ui.manual_gas1.text() + ' sccm')
+            manual_gas_keys.append(self.ui.label_gas_4.text()[:-1])
+            manual_gas_values.append(float(self.ui.manual_gas1.text()))
+        if self.ui.manual_gas2.text() != '':
+            self.ui.label_gas_2_setpoint.setText('Gas 2: ' + self.ui.manual_gas2.text() + ' sccm')
+            manual_gas_keys.append(self.ui.label_gas_5.text()[:-1])
+            manual_gas_values.append(float(self.ui.manual_gas2.text()))
+        if self.ui.manual_gas3.text() != '':
+            self.ui.label_gas_3_setpoint.setText('Gas 3: ' + self.ui.manual_gas3.text() + ' sccm')
+            manual_gas_keys.append(self.ui.label_gas_6.text()[:-1])
+            manual_gas_values.append(float(self.ui.manual_gas3.text()))
+
+        manual_gases = dict(zip(manual_gas_keys,manual_gas_values))
+        self.AppendManualSetpoints(manual_gases,manual_temp)
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
