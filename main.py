@@ -87,7 +87,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.log_period = 1
 
         self.plot_data = pd.DataFrame()
-        self.plot_history = 120
+        self.plot_history = 300
         self.params = ['Temp','Ethylene','Argon','Helium','Hydrogen']
 
     def ExecuteQueue(self):
@@ -134,9 +134,9 @@ class cvd_control(QtWidgets.QMainWindow):
                         # print(self.log_data)
                         # print(self.params)
                         if all(field in self.log_data for field in self.params):
-                            print('Time to update plots')
-                            print(self.log_data)
-                            print(self.params)
+                            # print('Time to update plots')
+                            # print(self.log_data)
+                            # print(self.params)
                             self.log_data.update({'Time':time.time()-self.recipe_start_time})
                             self.plot_data = self.plot_data.append(self.log_data,ignore_index=True)
                             self.UpdatePlots()
