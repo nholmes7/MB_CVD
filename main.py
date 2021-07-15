@@ -178,6 +178,22 @@ class cvd_control(QtWidgets.QMainWindow):
             i = i + 1
         self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
 
+        # Next, update the current setpoint labels to reflect the updated values
+        manual_labels = [self.ui.label_gas_4,
+            self.ui.label_gas_5,
+            self.ui.label_gas_6
+            ]
+        curr_setpoint_labels = [self.ui.label_gas_1_setpoint,
+            self.ui.label_gas_2_setpoint,
+            self.ui.label_gas_3_setpoint
+            ]
+        i = 0
+        for label in manual_labels:
+            gas = label.text()[:-1]
+            curr_setpoint_labels[i].setText(gas + ': ' + str(step_dict[gas]) + ' sccm')
+            i += 1
+        self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + str(self.temp_setpoint) + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+
     def AppendManualSetpoints(self,manual_gases,manual_temp):
         timestamp = time.time()
         for gas in manual_gases:
