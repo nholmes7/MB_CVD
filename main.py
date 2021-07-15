@@ -409,6 +409,9 @@ class cvd_control(QtWidgets.QMainWindow):
         print('self.params')
         print(self.params)
 
+        # Empty the plot history
+        self.plot_data = pd.DataFrame()
+
         # Clear the gas graph and re-plot
         self.ui.gas_graph.clear()
         for gas in self.MFCs:
@@ -443,6 +446,17 @@ class cvd_control(QtWidgets.QMainWindow):
         self.running = True
         self.recipe_start_time = time.time()
         self.log_initialize = False
+        # Empty the plot history
+        self.plot_data = pd.DataFrame()
+
+        # Clear the gas graph and re-plot
+        self.ui.gas_graph.clear()
+        for gas in self.MFCs:
+            self.gas_lines[gas] = self.ui.gas_graph.plot(name=gas,pen=self.pens[gas])
+
+        #Clear the temp graph and re-plot
+        self.ui.temp_graph.clear()
+        self.temp_line = self.ui.temp_graph.plot(pen=self.pens['Ethylene'])
 
     def StopRecipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe \
