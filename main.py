@@ -76,7 +76,7 @@ class cvd_control(QtWidgets.QMainWindow):
         self.ramping = False
         self.curr_temp = 0
         self.temp_setpoint = 0
-        self.gas_setpoints = []
+        # self.gas_setpoints = []
         self.step = []
         self.step_duration = 0
         self.recipe_start_time = time.time()
@@ -165,13 +165,16 @@ class cvd_control(QtWidgets.QMainWindow):
             self.StopRecipe()
             return
         timestamp = time.time()
+        step_keys = [i for i in self.curr_recipe.params]
+        step_keys = ['Time'] + step_keys
+        step_dict = dict(zip(step_keys,self.step))
         self.step_duration = self.step[0]
         self.temp_setpoint = self.step[1]
         i = 0
-        self.gas_setpoints = []
+        # self.gas_setpoints = []
         for gas in self.MFCs:
-            self.gas_setpoints.append(self.step[i+2])
-            self.queue.append(QueueItem(self.MFCs[gas].SetFlow,timestamp,params=self.gas_setpoints[i],fieldname=gas))
+            # self.gas_setpoints.append(self.step[i+2])
+            self.queue.append(QueueItem(self.MFCs[gas].SetFlow,timestamp,params=step_dict[gas],fieldname=gas))
             i = i + 1
         self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
 
