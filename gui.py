@@ -475,9 +475,9 @@ class Ui_MainWindow(object):
         self.lineEdit_param5_10.setObjectName("lineEdit_param5_10")
         self.verticalLayout_16.addWidget(self.lineEdit_param5_10)
         self.horizontalLayout.addLayout(self.verticalLayout_16)
-        self.label_3 = QLedLabel(self.centralwidget)
-        self.label_3.setGeometry(QtCore.QRect(520, 110, 67, 17))
-        self.label_3.setObjectName("label_3")
+        # self.label_3 = QLedLabel(self.centralwidget)
+        # self.label_3.setGeometry(QtCore.QRect(520, 110, 67, 17))
+        # self.label_3.setObjectName("label_3")
         self.widget = QtWidgets.QWidget(self.centralwidget)
         self.widget.setGeometry(QtCore.QRect(15, 301, 633, 27))
         self.widget.setObjectName("widget")
@@ -556,10 +556,10 @@ class Ui_MainWindow(object):
         self.column_3_label.setText(_translate("MainWindow", "Param 3"))
         self.column_4_label.setText(_translate("MainWindow", "Param 4"))
         self.column_5_label.setText(_translate("MainWindow", "Param 5"))
-        self.label_3.setText(_translate("MainWindow", "TextLabel"))
+        # self.label_3.setText(_translate("MainWindow", "TextLabel"))
         self.button_start_recipe.setText(_translate("MainWindow", "Start Recipe"))
         self.button_stop_recipe.setText(_translate("MainWindow", "Stop Recipe"))
         self.label_recipe_status.setText(_translate("MainWindow", "<html><head/><body><p>Recipe Status: <span style=\" font-weight:600;\">STOPPED</span></p></body></html>"))
         self.label_recipe_step_status.setText(_translate("MainWindow", "<html><head/><body><p>Current Step:</p></body></html>"))
 from pyqtgraph import PlotWidget
-from qledlabel import QLedLabel
+# from qledlabel import QLedLabel

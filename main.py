@@ -164,7 +164,7 @@ class cvd_control(QtWidgets.QMainWindow):
         except IndexError:
             self.StopRecipe()
             return
-        IncrementStepCounter()
+        self.IncrementStepCounter()
         timestamp = time.time()
         step_keys = [i for i in self.curr_recipe.params]
         step_keys = ['Time'] + step_keys
@@ -195,10 +195,21 @@ class cvd_control(QtWidgets.QMainWindow):
             ]
         setpoint_display_keys = [label.text()[:-1] for label in manual_labels]
         setpoint_displays = dict(zip(setpoint_display_keys,curr_setpoint_labels))
+        try:
+            # Change the key from Temp. to Temp if necessary
+            setpoint_displays['Temp'] = setpoint_displays.pop('Temp.')
+        except KeyError:
+            pass
+        try:
+            # Change the key from Temp. to Temp if necessary
+            updates['Temp'] = updates.pop('Temp.')
+        except KeyError:
+            pass
         for field in updates:
-            if field == 'Temp.':
-                setpoint_displays[field].setText('<html><head/><body><p>Temp.: </p></body></html>' + str(updates[field]) + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
-            setpoint_displays[field].setText(field + ': ' + str(updates[field]) + ' sccm')
+            if field == 'Temp':
+                setpoint_displays[field].setText('<html><head/><body><p>Temp.: </p></body></html>' + str(updates[field]) + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>')
+            else:
+                setpoint_displays[field].setText(field + ': ' + str(updates[field]) + ' sccm')
 
         # i = 0
         # for label in manual_labels:
@@ -212,7 +223,8 @@ class cvd_control(QtWidgets.QMainWindow):
         for field in manual_setpoints:
             if field == 'Temp.':
                 self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=manual_setpoints[field],fieldname='Temp'))
-            self.queue.append(QueueItem(self.MFCs[field].SetFlow,timestamp,params=manual_setpoints[field],fieldname=field))
+            else:
+                self.queue.append(QueueItem(self.MFCs[field].SetFlow,timestamp,params=manual_setpoints[field],fieldname=field))
 
     def AppendStepLogpoints(self):
 
@@ -518,7 +530,11 @@ class cvd_control(QtWidgets.QMainWindow):
         self.UpdateSetpointDisplay(manual_setpoints)
 
     def IncrementStepCounter(self):
-        step_no = round(float(self.ui.label_recipe_step_status.text()[-2:]))
+        try:
+            step_no = round(float(self.ui.label_recipe_step_status.text()[-2:]))
+        except ValueError:
+            # The first time through there is no step number to convert.
+            step_no = 0
         step_no += 1
         self.ui.label_recipe_step_status.setText('Current Step: ' + str(step_no))
 
