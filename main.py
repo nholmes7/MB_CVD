@@ -27,9 +27,9 @@ class cvd_control(QtWidgets.QMainWindow):
         # make required connections
         self.ui.save_button.clicked.connect(self.save_recipe)
         self.ui.open_button.clicked.connect(self.OpenRecipe)
-        self.ui.button_start_recipe.clicked.connect(self.start_recipe)
+        self.ui.button_start_recipe.clicked.connect(self.StartRecipe)
         self.ui.button_stop_recipe.clicked.connect(self.StopRecipe)
-        self.ui.button_apply_setpoints.clicked.connect(self.apply_setpoints)
+        self.ui.button_apply_setpoints.clicked.connect(self.ApplySetpoints)
 
         # Configure the plots and their settings.
         background_colour = self.palette().color(QtGui.QPalette.Window)
@@ -164,42 +164,55 @@ class cvd_control(QtWidgets.QMainWindow):
         except IndexError:
             self.StopRecipe()
             return
+        IncrementStepCounter()
         timestamp = time.time()
         step_keys = [i for i in self.curr_recipe.params]
         step_keys = ['Time'] + step_keys
         step_dict = dict(zip(step_keys,self.step))
         self.step_duration = self.step[0]
         self.temp_setpoint = self.step[1]
-        i = 0
-        # self.gas_setpoints = []
+        # i = 0
         for gas in self.MFCs:
-            # self.gas_setpoints.append(self.step[i+2])
             self.queue.append(QueueItem(self.MFCs[gas].SetFlow,timestamp,params=step_dict[gas],fieldname=gas))
-            i = i + 1
+            # i = i + 1
         self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=self.temp_setpoint,fieldname='Temp'))
+        # Making a copy in this way does not affect the original step_dict dictionary.
+        updates = dict(step_dict)
+        updates.pop('Time')
+        self.UpdateSetpointDisplay(updates)
 
+    def UpdateSetpointDisplay(self,updates):
         # Next, update the current setpoint labels to reflect the updated values
-        manual_labels = [self.ui.label_gas_4,
+        manual_labels = [self.ui.label_14,
+            self.ui.label_gas_4,
             self.ui.label_gas_5,
             self.ui.label_gas_6
             ]
-        curr_setpoint_labels = [self.ui.label_gas_1_setpoint,
+        curr_setpoint_labels = [self.ui.label_temp_setpoint,
+            self.ui.label_gas_1_setpoint,
             self.ui.label_gas_2_setpoint,
             self.ui.label_gas_3_setpoint
             ]
-        i = 0
-        for label in manual_labels:
-            gas = label.text()[:-1]
-            curr_setpoint_labels[i].setText(gas + ': ' + str(step_dict[gas]) + ' sccm')
-            i += 1
-        self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + str(self.temp_setpoint) + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+        setpoint_display_keys = [label.text()[:-1] for label in manual_labels]
+        setpoint_displays = dict(zip(setpoint_display_keys,curr_setpoint_labels))
+        for field in updates:
+            if field == 'Temp.':
+                setpoint_displays[field].setText('<html><head/><body><p>Temp.: </p></body></html>' + str(updates[field]) + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+            setpoint_displays[field].setText(field + ': ' + str(updates[field]) + ' sccm')
 
-    def AppendManualSetpoints(self,manual_gases,manual_temp):
+        # i = 0
+        # for label in manual_labels:
+        #     gas = label.text()[:-1]
+        #     curr_setpoint_labels[i].setText(gas + ': ' + str(step_dict[gas]) + ' sccm')
+        #     i += 1
+        # self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + str(self.temp_setpoint) + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+
+    def AppendManualSetpoints(self,manual_setpoints):
         timestamp = time.time()
-        for gas in manual_gases:
-            self.queue.append(QueueItem(self.MFCs[gas].SetFlow,timestamp,params=manual_gases[gas],fieldname=gas))
-        if manual_temp:
-            self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=manual_temp,fieldname='Temp'))
+        for field in manual_setpoints:
+            if field == 'Temp.':
+                self.queue.append(QueueItem(self.furnace.SetTemp,timestamp,params=manual_setpoints[field],fieldname='Temp'))
+            self.queue.append(QueueItem(self.MFCs[field].SetFlow,timestamp,params=manual_setpoints[field],fieldname=field))
 
     def AppendStepLogpoints(self):
 
@@ -439,7 +452,7 @@ class cvd_control(QtWidgets.QMainWindow):
             gas_flow.reset_index(drop=True,inplace=True)
             self.gas_lines[gas].setData(plot_time,gas_flow)
 
-    def start_recipe(self):
+    def StartRecipe(self):
         self.ui.label_recipe_status.setText("<html><head/><body><p>Recipe \
             Status: <span style=\" font-weight:600;\">RUNNING</span></p></body>\
             </html>")
@@ -464,28 +477,50 @@ class cvd_control(QtWidgets.QMainWindow):
             </html>")
         self.running = False
 
-    def apply_setpoints(self):
-        manual_gas_keys = []
-        manual_gas_values = []
-        manual_temp = None
-        if self.ui.manual_temp.text() != '':
-            self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + self.ui.manual_temp.text() + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
-            manual_temp = float(self.ui.manual_temp.text())
-        if self.ui.manual_gas1.text() != '':
-            self.ui.label_gas_1_setpoint.setText('Gas 1: ' + self.ui.manual_gas1.text() + ' sccm')
-            manual_gas_keys.append(self.ui.label_gas_4.text()[:-1])
-            manual_gas_values.append(float(self.ui.manual_gas1.text()))
-        if self.ui.manual_gas2.text() != '':
-            self.ui.label_gas_2_setpoint.setText('Gas 2: ' + self.ui.manual_gas2.text() + ' sccm')
-            manual_gas_keys.append(self.ui.label_gas_5.text()[:-1])
-            manual_gas_values.append(float(self.ui.manual_gas2.text()))
-        if self.ui.manual_gas3.text() != '':
-            self.ui.label_gas_3_setpoint.setText('Gas 3: ' + self.ui.manual_gas3.text() + ' sccm')
-            manual_gas_keys.append(self.ui.label_gas_6.text()[:-1])
-            manual_gas_values.append(float(self.ui.manual_gas3.text()))
+    def ApplySetpoints(self):
+        manual_setpoint_keys = []
+        manual_setpoint_values = []
+        manual_setpoint_fields = [self.ui.manual_temp,
+            self.ui.manual_gas1,
+            self.ui.manual_gas2,
+            self.ui.manual_gas3
+            ]
+        manual_setpoint_labels = [self.ui.label_14,
+            self.ui.label_gas_4,
+            self.ui.label_gas_5,
+            self.ui.label_gas_6
+            ]
+        i = 0
+        for field in manual_setpoint_fields:
+            if field.text() != '':
+                manual_setpoint_keys.append(manual_setpoint_labels[i].text()[:-1])
+                manual_setpoint_values.append(float(field.text()))
+            i += 1
+        # if self.ui.manual_temp.text() != '':
+        #     # self.ui.label_temp_setpoint.setText('<html><head/><body><p>Temp.: </p></body></html>' + self.ui.manual_temp.text() + '<html><head/><body><p><span style=\" vertical-align:super;\">o</span>C</p></body></html>' )
+        #     manual_setpoint_keys.append(self.ui.label_14.text()[:-1])
+        #     manual_setpoint_values.append(float(self.ui.manual_temp.text()))
+        # if self.ui.manual_gas1.text() != '':
+        #     # self.ui.label_gas_1_setpoint.setText('Gas 1: ' + self.ui.manual_gas1.text() + ' sccm')
+        #     manual_setpoint_keys.append(self.ui.label_gas_4.text()[:-1])
+        #     manual_setpoint_values.append(float(self.ui.manual_gas1.text()))
+        # if self.ui.manual_gas2.text() != '':
+        #     # self.ui.label_gas_2_setpoint.setText('Gas 2: ' + self.ui.manual_gas2.text() + ' sccm')
+        #     manual_setpoint_keys.append(self.ui.label_gas_5.text()[:-1])
+        #     manual_setpoint_values.append(float(self.ui.manual_gas2.text()))
+        # if self.ui.manual_gas3.text() != '':
+        #     # self.ui.label_gas_3_setpoint.setText('Gas 3: ' + self.ui.manual_gas3.text() + ' sccm')
+        #     manual_setpoint_keys.append(self.ui.label_gas_6.text()[:-1])
+        #     manual_setpoint_values.append(float(self.ui.manual_gas3.text()))
 
-        manual_gases = dict(zip(manual_gas_keys,manual_gas_values))
-        self.AppendManualSetpoints(manual_gases,manual_temp)
+        manual_setpoints = dict(zip(manual_setpoint_keys,manual_setpoint_values))
+        self.AppendManualSetpoints(manual_setpoints)
+        self.UpdateSetpointDisplay(manual_setpoints)
+
+    def IncrementStepCounter(self):
+        step_no = round(float(self.ui.label_recipe_step_status.text()[-2:]))
+        step_no += 1
+        self.ui.label_recipe_step_status.setText('Current Step: ' + str(step_no))
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
